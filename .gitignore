@@ -1,6 +1,18 @@
+# pycache
 */__pycache__
 __pycache__
+
+# venv
 venv
+
+# data directories
 data
-sampledata
+sample_data
+
+# vscode settings
 .vscode
+
+# custom Mac icons
+Icon?
+*/Icon?
+
