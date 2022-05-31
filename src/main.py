@@ -1,38 +1,38 @@
 """
 Main
+===
+Script that should be run to obtain all results.
 ---
 Data Science Assignment 3 - Home Depot Search Results
 """
 
-import numpy as np
+# dependencies
 import pandas as pd
 import spacy
-from helper import fix_dirs, load_data, Timer
+# local imports
+from helper import fix_dirs, Timer
+from helper import load_dataframes, parse_dataframes, store_as_docs, create_doc_dfs
 
 def main():
 	fix_dirs()
-	test()
+	colnames = ['product_title', 'search_term']
 
-def test():
+	timer = Timer(first_process='reading csv files')
+	dataframes: dict[str, pd.DataFrame] = load_dataframes(['train', 'test'], sample=True)
 
-	timer = Timer(first_process='reading in train, test & descriptions')
+	timer('parsing')
+	parsed_dataframes = parse_dataframes(dataframes, colnames)
 
-	train, test, descriptions = load_data(['train', 'test', 'product_descriptions'])
-	
-	timer(next_process='reading in attributes')
-	
-	attributes = load_data(['attributes'])[0]
+	timer('storing as docs')
+	store_as_docs(parsed_dataframes, colnames)
+
+	timer('reading docs back in')
+	loaded_dataframes: dict[str, pd.DataFrame] = create_doc_dfs(dataframes, colnames)
 
 	timer()
-
-	print('\ntest')
-	print(test.head(1))
-	print('\ntrain')
-	print(train.head(1))
-	print('\ndescriptions')
-	print(descriptions.head(1))
-	print('\nattributes')
-	print(attributes.head(1))
+	for name, dataframe in loaded_dataframes.items():
+		print(name, '\n', dataframe.head(5))
+		print(dataframe.columns)
 
 
 if __name__ == "__main__":

@@ -9,6 +9,9 @@ venv
 data
 sample_data
 
+# spacy doc directories
+spacy_docs
+
 # vscode settings
 .vscode
 
