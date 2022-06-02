@@ -7,6 +7,7 @@ Data Science Assignment 3 - Home Depot Search Results
 """
 
 # python standard library
+import argparse
 import os, sys, re				# directories
 from datetime import datetime	# printing experiment starting time
 import time						# getting time indications during the experiment
@@ -15,6 +16,13 @@ import pandas as pd				# reading in data
 import spacy
 
 BOLD = lambda string: f'\033[1m{string}\033[0m'
+
+def parse_wrapper(parser: argparse.ArgumentParser) -> bool:
+	"""Returns the parsed arguments of the file"""
+	parser.add_argument('-f', '--full', action='store_true',
+						help=('run script on full dataset, default is to run on sample data'))
+	
+	return parser.parse_args().full
 
 def fix_dirs() -> None:
 	"""Changes cwd to src, and creates the necessary directories"""
@@ -52,13 +60,13 @@ class Timer:
 		else:
 			print()
 
-def load_dataframes(filenames: list[str], sample: bool = False) -> dict[str, pd.DataFrame]:
+def load_dataframes(filenames: list[str], full: bool = False) -> dict[str, pd.DataFrame]:
 	"""
 	Loads given csv files into a list as pandas DataFrames.
 	---
 	### params
 		- filenames: names of the files to load, no need to specify path and file extension
-		- sample: set to False to run on the entire dataset
+		- full: set to True to run on the entire dataset
 	
 	### returns
 		- dataframes: dict with
@@ -66,7 +74,7 @@ def load_dataframes(filenames: list[str], sample: bool = False) -> dict[str, pd.
 			* values: the actual dataframes
 	"""
 	dataframes: dict[str, pd.DataFrame] = {}
-	if sample: data_dir: str = os.path.join(os.getcwd(), '..', 'sample_data')
+	if full: data_dir: str = os.path.join(os.getcwd(), '..', 'sample_data')
 	else: data_dir: str = os.path.join(os.getcwd(), '..', 'data')
 
 	for filename in filenames:
