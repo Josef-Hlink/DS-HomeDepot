@@ -33,10 +33,15 @@ def main():
 	loaded_dataframes: dict[str, pd.DataFrame] = create_doc_dfs(dataframes, colnames)
 
 	timer()
-	for name, dataframe in loaded_dataframes.items():
-		print(name, '\n', dataframe.head(5))
-		print(dataframe.columns)
 
+	for name, dataframe in loaded_dataframes.items():
+		print(name)
+		print(dataframe.head(5))
+		print(dataframe.columns)
+		for index, row in dataframe.head(5).iterrows():
+			# little bit of testing
+			print(type(row['search_term']))
+			print(row['search_term'], '<->', row['product_title'], row['search_term'].similarity(row['product_title']))
 
 if __name__ == "__main__":
 	main()

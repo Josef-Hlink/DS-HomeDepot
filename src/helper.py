@@ -74,8 +74,8 @@ def load_dataframes(filenames: list[str], full: bool = False) -> dict[str, pd.Da
 			* values: the actual dataframes
 	"""
 	dataframes: dict[str, pd.DataFrame] = {}
-	if full: data_dir: str = os.path.join(os.getcwd(), '..', 'sample_data')
-	else: data_dir: str = os.path.join(os.getcwd(), '..', 'data')
+	if full: data_dir: str = os.path.join(os.getcwd(), '..', 'data')
+	else: data_dir: str = os.path.join(os.getcwd(), '..', 'sample_data')
 
 	for filename in filenames:
 		try:
@@ -157,10 +157,12 @@ def create_doc_dfs(dataframes: dict[str, pd.DataFrame], colnames: list[str]) -> 
 	for df_name, df in dataframes.items():
 		df_path = os.path.join(os.getcwd(), '..', 'spacy_docs', df_name)
 		for col_name in colnames:
+			docs: list[spacy.tokens.doc.Doc] = []
 			col_path = os.path.join(df_path, col_name)
-			for index, row in df.iterrows():
-				doc = spacy.tokens.Doc(empty_vocab).from_disk(os.path.join(col_path, str(index)))
-				row[col_name] = doc
+			for i in range(len(df)):
+				doc = spacy.tokens.Doc(empty_vocab).from_disk(os.path.join(col_path, str(i)))
+				docs.append(doc)
+			df[col_name] = docs
 		dfs.update({df_name: df})
-	
+
 	return dfs
