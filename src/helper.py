@@ -51,6 +51,21 @@ def fix_dirs() -> None:
 	if not os.path.exists(results_dir := os.path.join(cwd, '..', 'results')):
 		os.mkdir(results_dir)
 
+def print_pipeline(datasets: list[str], col_names: list[str], full: bool, parse: bool) -> None:
+	flag = 'sample_' if not full else ''
+	datasets = ', '.join([flag+ds+'.csv' for ds in datasets])
+	col_names = ', '.join(col_names)
+	if parse:
+		pipeline = [f'read {datasets}',
+					f'parse {col_names} data into spaCy docs',
+					'store spaCy doc data to disk']
+	else:
+		pipeline = [f'read {datasets}',
+					f'load stored spaCy doc data into columns {col_names}',
+					'calculate similarity scores']
+	print('\npipeline:')
+	for pipe in pipeline: print('*', pipe)
+
 class Timer:
 	def __init__(self, first_process: str) -> None:
 		"""Sets up a timer object and prints the name of the first process"""

@@ -12,7 +12,8 @@ import argparse			# specifying args from command line |
 import pandas as pd		# dataframes						|
 import spacy			# natural language processing		|
 # local imports -----------------------------------------------------------------------------
-from helper import argparse_wrapper, suppress_W008, fix_dirs, Timer		# general utilities  |
+from helper import (argparse_wrapper, suppress_W008,					# general utilities	 |
+					fix_dirs, print_pipeline, Timer)					# ""				 |
 from datamanager import (load_dataframes, parse_dataframes,				# data management	 |
 						 store_docs_as_docbins, create_doc_dataframes)	# ""				 |
 from processing import calc_similarity_scores							# further processing |
@@ -26,11 +27,15 @@ def main():
 	suppress_W008()
 	fix_dirs()
 
+	datasets = ['train', 'test']
 	colnames = ['product_title', 'search_term']
+
+	print_pipeline(datasets, colnames, full, parse)
+
 	nlp: spacy.Language = spacy.load('en_core_web_lg')
 
 	timer = Timer(first_process='reading csv files into dataframes')
-	dataframes: dict[str, pd.DataFrame] = load_dataframes(['train', 'test'], full=full)
+	dataframes: dict[str, pd.DataFrame] = load_dataframes(datasets, full=full)
 
 	# code block between the separators is responsible for parsing relevant strings and storing this data
 	# (if parsed data is already present on the disk, this step can be skipped)
