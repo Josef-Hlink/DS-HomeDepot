@@ -10,7 +10,7 @@ data
 sample_data
 
 # spacy doc directories
-spacy_docs
+docbins
 
 # vscode settings
 .vscode
@@ -19,3 +19,6 @@ spacy_docs
 Icon?
 */Icon?
 
+# ipynb test quite
+test.ipynb
+*/.ipynb_checkpoints
