@@ -6,11 +6,12 @@ General helper functions that are called from main.
 Data Science Assignment 3 - Home Depot Search Results
 """
 
-# python standard library
-import argparse
-import os, sys, re				# directories
-from datetime import datetime	# printing experiment starting time
-import time						# getting time indications during the experiment
+# python standard library --------------------------------------------------------
+import argparse					# easier switching between sample & full datasets |
+import os, sys, re				# directories									  |
+from datetime import datetime	# printing experiment starting time				  |
+import time						# getting time indications during the experiment  |
+# --------------------------------------------------------------------------------
 
 BOLD = lambda string: f'\033[1m{string}\033[0m'
 

@@ -6,14 +6,16 @@ Script that should be run to generate all results.
 Data Science Assignment 3 - Home Depot Search Results
 """
 
-# python standard library
-import argparse
-# dependencies
-import pandas as pd
-import spacy
-# local imports
-from helper import argparse_wrapper, fix_dirs, Timer
-from datamanager import load_dataframes, parse_dataframes, store_docs_as_docbins, create_doc_dataframes
+# python standard library ------------------------------------------------
+import argparse			# easier switching between sample & full datasets |
+# dependencies -----------------------------------------------------------
+import pandas as pd		# dataframes									  |
+import spacy			# natural language processing					  |
+# local imports ----------------------------------------------------------------------------
+from helper import argparse_wrapper, fix_dirs, Timer					# general utilities |
+from datamanager import (load_dataframes, parse_dataframes,				# data management	|
+						 store_docs_as_docbins, create_doc_dataframes)	# ""				|
+# ------------------------------------------------------------------------------------------
 
 def main():
 
