@@ -7,13 +7,13 @@ Data Science Assignment 3 - Home Depot Search Results
 """
 
 # python standard library ----------------------------------------
-import os, sys, shutil  		    # directories                 |
-from functools import lru_cache	    # speeding up nlp parsing     |
+import os, sys, shutil				# directories				  |
+from functools import lru_cache		# speeding up nlp parsing	  |
 # dependencies ---------------------------------------------------
-import pandas as pd				    # dataframes                  |
-import spacy                        # natural language processing |
+import pandas as pd					# dataframes				  |
+import spacy						# natural language processing |
 # local imports --------------------------------------------------
-from helper import BOLD             # slightly improving TUI      |
+from helper import BOLD				# slightly improved TUI		  |
 # ----------------------------------------------------------------
 
 def load_dataframes(filenames: list[str], full: bool = False) -> dict[str, pd.DataFrame]:
@@ -40,7 +40,7 @@ def load_dataframes(filenames: list[str], full: bool = False) -> dict[str, pd.Da
 			df.dropna(inplace=True)             # remove all corrupted entries
 			dataframes.update({filename: df})   # add the loaded dataframe to the dict
 		except FileNotFoundError:
-			print(f'No file called {BOLD(filename)} is present in the data directory.')
+			print(f'Error: No file called {BOLD(filename)} is present in the data directory.')
 			sys.exit(1)
 	
 	return dataframes
@@ -70,7 +70,7 @@ def parse_dataframes(dataframes: dict[str, pd.DataFrame], colnames: list[str],
 		for col in colnames:
 			try: df[col] = df[col].apply(_nlp_wrapper)  # this is where the parsing happens
 			except KeyError:
-				print(f'Dataframe "{BOLD(df_name)}" has no column called "{BOLD(col)}"')
+				print(f'Error: Dataframe "{BOLD(df_name)}" has no column called "{BOLD(col)}"')
 				sys.exit(1)
 	
 	return dataframes

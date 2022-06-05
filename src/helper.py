@@ -8,6 +8,7 @@ Data Science Assignment 3 - Home Depot Search Results
 
 # python standard library --------------------------------------------------------
 import argparse					# easier switching between sample & full datasets |
+import warnings					# suppressing specific warning					  |
 import os, sys, re				# directories									  |
 from datetime import datetime	# printing experiment starting time				  |
 import time						# getting time indications during the experiment  |
@@ -28,6 +29,10 @@ def argparse_wrapper(parser: argparse.ArgumentParser) -> tuple[bool]:
 						help='parse string data into spaCy docs, required for first run!')
 	
 	return (parser.parse_args().full, parser.parse_args().parse)
+
+def suppress_W008() -> None:
+	"""Suppresses useless warning that (correctly) states some of the words in the data are not recognized by spaCy"""
+	warnings.filterwarnings('ignore', message=r'\[W008\]', category=UserWarning)
 
 def fix_dirs() -> None:
 	"""Changes cwd to src, and creates the necessary directories"""
