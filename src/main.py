@@ -1,7 +1,7 @@
 """
 Main
 ===
-Script that should be run to obtain all results.
+Script that should be run to generate all results.
 ---
 Data Science Assignment 3 - Home Depot Search Results
 """
@@ -13,7 +13,7 @@ import pandas as pd
 import spacy
 # local imports
 from helper import argparse_wrapper, fix_dirs, Timer
-from helper import load_dataframes, parse_dataframes, store_docs_as_docbins, create_doc_dataframes
+from datamanager import load_dataframes, parse_dataframes, store_docs_as_docbins, create_doc_dataframes
 
 def main():
 
