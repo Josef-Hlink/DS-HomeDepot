@@ -15,12 +15,19 @@ import time						# getting time indications during the experiment  |
 
 BOLD = lambda string: f'\033[1m{string}\033[0m'
 
-def argparse_wrapper(parser: argparse.ArgumentParser) -> bool:
-	"""Returns the parsed arguments of the file"""
+def argparse_wrapper(parser: argparse.ArgumentParser) -> tuple[bool]:
+	"""
+	Returns the parsed arguments of the file
+	---
+	- full: toggle the use of running on full dataset [default = False]
+	- parse: toggle whether or not all data needs to be parsed [default = False]
+	"""
 	parser.add_argument('-f', '--full', action='store_true',
-						help=('run script on full dataset, default is to run on sample data'))
+						help='run script on full dataset, default is to run on sample data')
+	parser.add_argument('-p', '--parse', action='store_true',
+						help='parse string data into spaCy docs, required for first run!')
 	
-	return parser.parse_args().full
+	return (parser.parse_args().full, parser.parse_args().parse)
 
 def fix_dirs() -> None:
 	"""Changes cwd to src, and creates the necessary directories"""
