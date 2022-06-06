@@ -15,14 +15,15 @@ import spacy				# natural language processing	|
 from helper import BOLD		# slightly improved TUI			|
 # ----------------------------------------------------------
 
-def calc_similarity_scores(dataframes: dict[str, pd.DataFrame], col_names: list[str]) -> dict[str, pd.DataFrame]:
+def calc_similarity_scores(dataframes: dict[str, pd.DataFrame],
+						   colnames: dict[str, list[str]]) -> dict[str, pd.DataFrame]:
 	
 	def _calc_sim(doc1: spacy.tokens.Doc, doc2: spacy.tokens.Doc) -> float:
 		"""Note: this would generate a warning, as some of the words in de dataset are not recognized by spaCy"""
 		return doc1.similarity(doc2)
 	
 	for df_name, df in dataframes.items():
-		for col in col_names:
+		for col in colnames[df_name]:
 			
 			try: df[f'zipped_{col}'] = tuple(zip(df['search_term'], df[col]))
 			except KeyError:

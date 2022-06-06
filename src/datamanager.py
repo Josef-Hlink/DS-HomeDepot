@@ -45,7 +45,7 @@ def load_dataframes(filenames: list[str], full: bool = False) -> dict[str, pd.Da
 	
 	return dataframes
 
-def parse_dataframes(dataframes: dict[str, pd.DataFrame], colnames: list[str],
+def parse_dataframes(dataframes: dict[str, pd.DataFrame], colnames: dict[str, list[str]],
 					 nlp: spacy.Language) -> dict[str, pd.DataFrame]:
 	"""
 	In the given dataframes, converts the string values in the given dataframes into spaCy `Doc` objects.
@@ -67,7 +67,7 @@ def parse_dataframes(dataframes: dict[str, pd.DataFrame], colnames: list[str],
 		return nlp(string)
 
 	for df_name, df in dataframes.items():
-		for col in colnames:
+		for col in colnames[df_name]:
 			try: df[col] = df[col].apply(_nlp_wrapper)  # this is where the parsing happens
 			except KeyError:
 				print(f'Error: Dataframe "{BOLD(df_name)}" has no column called "{BOLD(col)}"')
@@ -75,7 +75,8 @@ def parse_dataframes(dataframes: dict[str, pd.DataFrame], colnames: list[str],
 	
 	return dataframes
 
-def store_docs_as_docbins(dataframes: dict[str, pd.DataFrame], colnames: list[str], full: bool = False) -> None:
+def store_docs_as_docbins(dataframes: dict[str, pd.DataFrame], colnames: dict[str, list[str]],
+						  full: bool = False) -> None:
 	"""
 	Stores the spaCy `Doc` objects present in the given dataframes on the user's disk as `DocBin` objects
 	---
@@ -93,7 +94,7 @@ def store_docs_as_docbins(dataframes: dict[str, pd.DataFrame], colnames: list[st
 
 	# create DocBins for every relevant column in the dataframes and store in dict
 	doc_bins = {df_name: {col: spacy.tokens.DocBin(docs=df[col]) \
-				for col in colnames} for df_name, df in dataframes.items()}
+				for col in colnames[df_name]} for df_name, df in dataframes.items()}
 	# example where dataframes = ['train', 'test'] and col_names = ['search_term', 'product_title']:
 	# doc_bins = {'train': {'search_term': <DocBin>, 'product_title': <DocBin>},
 	#             'test':  {'search_term': <DocBin>, 'product_title': <DocBin>}}
@@ -104,7 +105,7 @@ def store_docs_as_docbins(dataframes: dict[str, pd.DataFrame], colnames: list[st
 		for col, doc_bin in col_dict.items():
 			doc_bin.to_disk(os.path.join(df_dir,col+'.spacy'))	# store DocBin to disk at specified location
 
-def create_doc_dataframes(dataframes: dict[str, pd.DataFrame], colnames: list[str],
+def create_doc_dataframes(dataframes: dict[str, pd.DataFrame], colnames: dict[str, list[str]],
 						  nlp: spacy.Language, full: bool = False) -> dict[str, pd.DataFrame]:
 	"""
 	Replaces the string data in the given dataframes with corresponding spaCy `Doc` objects present on the user's disk
@@ -125,13 +126,13 @@ def create_doc_dataframes(dataframes: dict[str, pd.DataFrame], colnames: list[st
 	
 	# load DocBins into dict from disk
 	doc_bins = {df_name: {col: spacy.tokens.DocBin().from_disk(os.path.join(db_dir,df_name,col+'.spacy')) \
-				for col in colnames} for df_name in dataframes.keys()}
+				for col in colnames[df_name]} for df_name in dataframes.keys()}
 	# example where dataframes = ['train', 'test'] and col_names = ['search_term', 'product_title']:
 	# doc_bins = {'train': {'search_term': <DocBin>, 'product_title': <DocBin>},
 	#             'test':  {'search_term': <DocBin>, 'product_title': <DocBin>}}
 
 	for df_name, df in dataframes.items():
-		for col in colnames:
+		for col in colnames[df_name]:
 			doc_bin = doc_bins[df_name][col]			# access DocBin in dict
 			docs = list(doc_bin.get_docs(nlp.vocab))	# extract all Docs from DocBin
 			df[col] = docs								# load into dataframe, overwriting string data

@@ -51,17 +51,17 @@ def fix_dirs() -> None:
 	if not os.path.exists(results_dir := os.path.join(cwd, '..', 'results')):
 		os.mkdir(results_dir)
 
-def print_pipeline(datasets: list[str], col_names: list[str], full: bool, parse: bool) -> None:
+def print_pipeline(datasets: list[str], colnames: dict[str: str], full: bool, parse: bool) -> None:
 	flag = 'sample_' if not full else ''
 	datasets = ', '.join([flag+ds+'.csv' for ds in datasets])
-	col_names = ', '.join(col_names)
+	colnames = ', '.join(set(col for col_list in colnames.values() for col in col_list))
 	if parse:
 		pipeline = [f'read {datasets}',
-					f'parse {col_names} data into spaCy docs',
+					f'parse {colnames} data into spaCy docs',
 					'store spaCy doc data to disk']
 	else:
 		pipeline = [f'read {datasets}',
-					f'load stored spaCy doc data into columns {col_names}',
+					f'load stored spaCy doc data into columns {colnames}',
 					'calculate similarity scores']
 	print('\npipeline:')
 	for pipe in pipeline: print('*', pipe)
@@ -71,6 +71,7 @@ class Timer:
 		"""Sets up a timer object and prints the name of the first process"""
 		print(f'\nexperiment started at {datetime.now().strftime("%H:%M:%S")}')
 		print(f'\n{first_process}: ', end='')
+		self.start: float = time.perf_counter()
 		self.tic: float = time.perf_counter()
 
 	def __call__(self, next_process: str = None) -> None:
@@ -82,3 +83,8 @@ class Timer:
 			self.tic = toc
 		else:
 			print()
+			total_time: float = time.perf_counter() - self.start
+			minutes = int((total_time) // 60)
+			seconds = round((total_time) % 60, 1)
+			total_time_string = f'{minutes}:{str(seconds).zfill(4)} min' if minutes else f'{seconds} sec\n'
+			print(f'\nexperiment took {total_time_string}')
