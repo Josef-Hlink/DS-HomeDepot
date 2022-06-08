@@ -14,8 +14,8 @@ import spacy            # natural language processing       |
 # local imports -----------------------------------------------------------------------------
 from helper import (argparse_wrapper, suppress_W008,                    # general utilities  |
                     fix_dirs, print_pipeline, Timer)                    # ""                 |
-from datamanager import (load_dataframes, parse_dataframes,             # data management    |
-                         store_docs_as_docbins, create_doc_dataframes)  # ""                 |
+from datamanager import (load_dataframes, parse_data,                   # data management    |
+                         store_as_docbin, create_doc_dataframes)        # ""                 |
 from processing import calc_similarity_scores                           # further processing |
 # -------------------------------------------------------------------------------------------
 
@@ -25,11 +25,10 @@ def main():
 
     full, parse = argparse_wrapper(argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter))
     suppress_W008()
-    fix_dirs()
+    db_dir = fix_dirs(full=full, parse=parse)
 
-    datasets = ['train', 'test', 'product_descriptions']
+    datasets = ['train', 'product_descriptions']
     colnames = {'train': ['product_title', 'search_term'],
-                'test':  ['product_title', 'search_term'],
                 'product_descriptions': ['product_description']}
 
     print_pipeline(datasets, colnames, full, parse)
@@ -42,15 +41,17 @@ def main():
     # (if parsed data is already present on the disk, this step can be skipped)
     # ----------------------------------------------------------------------------------------------------
     if parse:
-        timer('parsing strings to docs')
-        dataframes: dict[str, pd.DataFrame] = parse_dataframes(dataframes, colnames, nlp)
-
-        timer('storing docs as docbins')
-        store_docs_as_docbins(dataframes, colnames, full=full)
-
+        for df_name, df in dataframes.items():
+            for col in colnames[df_name]:
+                timer(f'parsing {df_name} - "{col}"')
+                s: pd.Series = df[col]
+                db: spacy.tokens.DocBin = parse_data(s, nlp)
+                store_as_docbin(db, db_dir, df_name, col)
+                del s, db   # help Python with garbage collection
         timer()
         quit()		# when data has been parsed and stored, prematurely quit the script
     # ----------------------------------------------------------------------------------------------------
+
 
     timer('reading docbins into dataframes')
     dataframes: dict[str, pd.DataFrame] = create_doc_dataframes(dataframes, colnames, nlp, full=full)

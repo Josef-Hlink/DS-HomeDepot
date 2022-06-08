@@ -9,7 +9,7 @@ Data Science Assignment 3 - Home Depot Search Results
 # python standard library --------------------------------------------------------
 import argparse                 # easier switching between sample & full datasets |
 import warnings                 # suppressing specific warning                    |
-import os, sys, re              # directories                                     |
+import os, sys, re, shutil      # directories                                     |
 from datetime import datetime   # printing experiment starting time               |
 import time                     # getting time indications during the experiment  |
 # --------------------------------------------------------------------------------
@@ -34,7 +34,7 @@ def suppress_W008() -> None:
     """Suppresses useless warning that (correctly) states some of the words in the data are not recognized by spaCy"""
     warnings.filterwarnings('ignore', message=r'\[W008\]', category=UserWarning)
 
-def fix_dirs() -> None:
+def fix_dirs(full: bool = False, parse: bool = False) -> str:
     """Changes cwd to src, and creates the necessary directories"""
     cwd = os.getcwd()
     if cwd.split(os.sep)[-1] != 'src':
@@ -50,6 +50,14 @@ def fix_dirs() -> None:
     
     if not os.path.exists(results_dir := os.path.join(cwd, '..', 'results')):
         os.mkdir(results_dir)
+    
+    if parse:
+        flag = '_sample' if not full else ''
+        if os.path.exists((db_dir := os.path.join('..','docbins'+flag))):
+            shutil.rmtree(db_dir)   # clear old data
+        os.mkdir(db_dir)            # make fresh directory
+        return db_dir
+    return db_dir
 
 def print_pipeline(datasets: list[str], colnames: dict[str: str], full: bool, parse: bool) -> None:
     flag = 'sample_' if not full else ''

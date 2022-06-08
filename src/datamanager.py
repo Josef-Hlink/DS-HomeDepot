@@ -45,20 +45,16 @@ def load_dataframes(filenames: list[str], full: bool = False) -> dict[str, pd.Da
     
     return dataframes
 
-def parse_dataframes(dataframes: dict[str, pd.DataFrame], colnames: dict[str, list[str]],
-                     nlp: spacy.Language) -> dict[str, pd.DataFrame]:
+def parse_data(s: pd.Series, nlp: spacy.Language) -> spacy.tokens.DocBin:
     """
-    In the given dataframes, converts the string values in the given dataframes into spaCy `Doc` objects.
+    In the given pandas Series, converts the string values into spaCy `Doc` objects.
     ---
     ### params
-        - dataframes: dict with 
-            * keys: the names of the dataframes on which the conversion should be done
-            * values: the actual dataframes
-        - colnames: list of column names containing parsable string data
+        - s: a pandas Series object containing strings
         - nlp: the spaCy language object used to parse the strings
     
     ### returns
-        - dataframes: the same dict, but with parsed dataframes
+        - db: a spaCy `DocBin` containing all the parsed string data
     """
 
     @lru_cache(maxsize=50)
@@ -66,44 +62,24 @@ def parse_dataframes(dataframes: dict[str, pd.DataFrame], colnames: dict[str, li
         """small wrapper so caching can be used for a slight (but welcome) speed improvement"""
         return nlp(string)
 
-    for df_name, df in dataframes.items():
-        for col in colnames[df_name]:
-            try: df[col] = df[col].apply(_nlp_wrapper)  # this is where the parsing happens
-            except KeyError:
-                print(f'Error: Dataframe "{BOLD(df_name)}" has no column called "{BOLD(col)}"')
-                sys.exit(1)
-    
-    return dataframes
+    s = s.apply(_nlp_wrapper)           # parse all data
+    db = spacy.tokens.DocBin(docs=s)    # store as spaCy DocBin
+    return db
 
-def store_docs_as_docbins(dataframes: dict[str, pd.DataFrame], colnames: dict[str, list[str]],
-                          full: bool = False) -> None:
+def store_as_docbin(db: spacy.tokens.DocBin, db_dir: str, df_name: str, col: str) -> None:
     """
-    Stores the spaCy `Doc` objects present in the given dataframes on the user's disk as `DocBin` objects
+    Stores a spaCy `DocBin`on the user's disk at the specified location
     ---
     ### params
-        - dataframes: dict with 
-            * keys: the names of the dataframes containing `Doc` objects to be stored
-            * values: the actual dataframes
-        - colnames: list of column names containing `Doc` objects
-        - full: set to True to run on the entire dataset
+        - db: a spaCy `DocBin` that is to be saved
+        - db_dir: the location of all `DocBin`s
+        - df_name: name of the dataframe where the `DocBin` originated from
+        - col: name of the column in that dataframe represented by the given `DocBin`
     """
-    flag = '_sample' if not full else ''
-    if os.path.exists((db_dir := os.path.join('..','docbins'+flag))):
-        shutil.rmtree(db_dir)   # clear old data
-    os.mkdir(db_dir)            # make fresh directory
 
-    # create DocBins for every relevant column in the dataframes and store in dict
-    doc_bins = {df_name: {col: spacy.tokens.DocBin(docs=df[col]) \
-                for col in colnames[df_name]} for df_name, df in dataframes.items()}
-    # example where dataframes = ['train', 'test'] and col_names = ['search_term', 'product_title']:
-    # doc_bins = {'train': {'search_term': <DocBin>, 'product_title': <DocBin>},
-    #             'test':  {'search_term': <DocBin>, 'product_title': <DocBin>}}
-
-    for df_name, col_dict in doc_bins.items():
-        if not os.path.exists((df_dir := os.path.join(db_dir,df_name))):
-            os.mkdir(df_dir)
-        for col, doc_bin in col_dict.items():
-            doc_bin.to_disk(os.path.join(df_dir,col+'.spacy'))	# store DocBin to disk at specified location
+    if not os.path.exists((df_dir := os.path.join(db_dir,df_name))):
+        os.mkdir(df_dir)
+    db.to_disk(os.path.join(df_dir,col+'.spacy'))	# store DocBin to disk at specified location
 
 def create_doc_dataframes(dataframes: dict[str, pd.DataFrame], colnames: dict[str, list[str]],
                           nlp: spacy.Language, full: bool = False) -> dict[str, pd.DataFrame]:
