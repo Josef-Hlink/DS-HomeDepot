@@ -57,7 +57,7 @@ def fix_dirs(full: bool = False, parse: bool = False) -> str:
             shutil.rmtree(db_dir)   # clear old data
         os.mkdir(db_dir)            # make fresh directory
         return db_dir
-    return db_dir
+    return ''
 
 def print_pipeline(datasets: list[str], colnames: dict[str: str], full: bool, parse: bool) -> None:
     flag = 'sample_' if not full else ''
