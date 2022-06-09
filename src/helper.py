@@ -16,25 +16,22 @@ import time                     # getting time indications during the experiment
 
 BOLD = lambda string: f'\033[1m{string}\033[0m'
 
-def argparse_wrapper(parser: argparse.ArgumentParser) -> tuple[bool]:
-    """
-    Returns the parsed arguments of the file
-    ---
-    - full: toggle the use of running on full dataset [default = False]
-    - parse: toggle whether or not all data needs to be parsed [default = False]
-    """
+def argparse_wrapper(parser: argparse.ArgumentParser) -> tuple[str, bool]:
+    """Returns the parsed arguments of the file"""
     parser.add_argument('-f', '--full', action='store_true',
                         help='run script on full dataset, default is to run on sample data')
     parser.add_argument('-p', '--parse', action='store_true',
                         help='parse string data into spaCy docs, required for first run!')
     
-    return (parser.parse_args().full, parser.parse_args().parse)
+    s_suff = '' if parser.parse_args().full else '_sample'
+    p_flag = parser.parse_args().parse
+    return (s_suff, p_flag)
 
 def suppress_W008() -> None:
     """Suppresses useless warning that (correctly) states some of the words in the data are not recognized by spaCy"""
     warnings.filterwarnings('ignore', message=r'\[W008\]', category=UserWarning)
 
-def fix_dirs(full: bool = False, parse: bool = False) -> str:
+def fix_dirs(s_suff: str, p_flag: bool) -> None:
     """Changes cwd to src, and creates the necessary directories"""
     cwd = os.getcwd()
     if cwd.split(os.sep)[-1] != 'src':
@@ -48,28 +45,30 @@ def fix_dirs(full: bool = False, parse: bool = False) -> str:
         print(f'\n WARNING: Working directory changed to "{cwd}".',
               f'Consider running {BOLD(caller)} directly from "src" dir next time.\n')
     
+    if os.path.exists((db_dir := os.path.join('..','docbins'+s_suff))):
+        if p_flag:
+            shutil.rmtree(db_dir)    # clear old data
+            os.mkdir(db_dir)         # make fresh directory in case we want to create a new one
+    else:
+        os.mkdir(db_dir)             # make fresh directory in case there wasn't one to start with
     if not os.path.exists(results_dir := os.path.join(cwd, '..', 'results')):
         os.mkdir(results_dir)
-    
-    if parse:
-        flag = '_sample' if not full else ''
-        if os.path.exists((db_dir := os.path.join('..','docbins'+flag))):
-            shutil.rmtree(db_dir)   # clear old data
-        os.mkdir(db_dir)            # make fresh directory
-        return db_dir
-    return ''
 
-def print_pipeline(datasets: list[str], colnames: dict[str: str], full: bool, parse: bool) -> None:
-    flag = 'sample_' if not full else ''
-    datasets = ', '.join([flag+ds+'.csv' for ds in datasets])
-    colnames = ', '.join(set(col for col_list in colnames.values() for col in col_list))
-    if parse:
-        pipeline = [f'read {datasets}',
-                    f'parse {colnames} data into spaCy docs',
+def print_pipeline(datasets: list[str], s_suff: str, p_flag: bool) -> None:
+    lookup_table = {'train': ['product_title', 'search_term'],
+                    'product_descriptions': ['product_description'],
+                    'attributes': ['attributes']}
+    
+    datasets_to_read = ', '.join([ds+s_suff+'.csv' for ds in datasets])
+    columns_to_parse = ', '.join(set(col for dataset in datasets for col in lookup_table[dataset]))
+
+    if p_flag:
+        pipeline = [f'read {datasets_to_read}',
+                    f'parse {columns_to_parse} data into spaCy docs',
                     'store spaCy doc data to disk']
     else:
-        pipeline = [f'read {datasets}',
-                    f'load stored spaCy doc data into columns {colnames}',
+        pipeline = [f'read {datasets_to_read}',
+                    f'load stored spaCy doc data into columns {columns_to_parse}',
                     'calculate similarity scores']
     print('\npipeline:')
     for pipe in pipeline: print('*', pipe)

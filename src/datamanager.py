@@ -16,29 +16,25 @@ import spacy                        # natural language processing |
 from helper import BOLD             # slightly improved TUI       |
 # ----------------------------------------------------------------
 
-def load_dataframes(filenames: list[str], full: bool = False) -> dict[str, pd.DataFrame]:
+def load_dataframes(filenames: list[str], s_suff: str) -> list[pd.DataFrame]:
     """
-    Loads given csv files into a list as pandas DataFrames.
-    ---
+    Loads given csv files into a list as pandas `DataFrame`s.
     ### params
-        - filenames: names of the files to load, no need to specify path and file extension
-        - full: set to True to run on the entire dataset
-    
+        - filenames: names of the files to load, path and file extension do not need to be specified
+        - s_suff: determines whether the experiment is run on sample dataset
     ### returns
-        - dataframes: dict with
-            * keys: the names of the dataframes (just the specified filename)
-            * values: the actual dataframes
+        - dataframes: list containing all of the loaded `DataFrame`s
     """
-    dataframes: dict[str, pd.DataFrame] = {}
-    if full: data_dir: str = os.path.join(os.getcwd(), '..', 'data')
-    else: data_dir: str = os.path.join(os.getcwd(), '..', 'sample_data')
+    dataframes: list[pd.DataFrame] = []
+    data_dir: str = os.path.join(os.getcwd(), '..', 'sample_data') \
+                    if len(s_suff) else os.path.join(os.getcwd(), '..', 'data')
 
     for filename in filenames:
         try:
             filepath = os.path.join(data_dir, filename+'.csv')
             df = pd.read_csv(filepath, encoding='ISO-8859-1')
-            df.dropna(inplace=True)             # remove all corrupted entries
-            dataframes.update({filename: df})   # add the loaded dataframe to the dict
+            df.dropna(inplace=True)         # remove all corrupted entries
+            dataframes.append(df)           # add the loaded dataframe to the list
         except FileNotFoundError:
             print(f'Error: No file called {BOLD(filename)} is present in the data directory.')
             sys.exit(1)
@@ -47,70 +43,46 @@ def load_dataframes(filenames: list[str], full: bool = False) -> dict[str, pd.Da
 
 def parse_data(s: pd.Series, nlp: spacy.Language) -> spacy.tokens.DocBin:
     """
-    In the given pandas Series, converts the string values into spaCy `Doc` objects.
-    ---
+    In the given pandas `Series`, converts the string values into spaCy `Doc` objects.
     ### params
-        - s: a pandas Series object containing strings
-        - nlp: the spaCy language object used to parse the strings
-    
+        - s: a pandas `Series` object containing strings
+        - nlp: the spaCy `Language` object used to parse the strings
     ### returns
-        - db: a spaCy `DocBin` containing all the parsed string data
+        - db: a spaCy `DocBin` object containing all the parsed string data
     """
 
-    @lru_cache(maxsize=50)
+    @lru_cache(maxsize=1)
     def _nlp_wrapper(string: str) -> spacy.tokens.Doc:
-        """small wrapper so caching can be used for a slight (but welcome) speed improvement"""
+        """small wrapper for speed improvement on product title data"""
         return nlp(string)
 
-    s = s.apply(_nlp_wrapper)           # parse all data
+    s = s.apply(_nlp_wrapper) if s.name == 'product_title' else s.apply(nlp)
+    
     db = spacy.tokens.DocBin(docs=s)    # store as spaCy DocBin
     return db
 
-def store_as_docbin(db: spacy.tokens.DocBin, db_dir: str, df_name: str, col: str) -> None:
+def store_as_docbin(db: spacy.tokens.DocBin, col_name: str, s_suff: str) -> None:
     """
-    Stores a spaCy `DocBin`on the user's disk at the specified location
-    ---
+    Stores a spaCy `DocBin`on the user's disk at the specified location.
     ### params
         - db: a spaCy `DocBin` that is to be saved
-        - db_dir: the location of all `DocBin`s
-        - df_name: name of the dataframe where the `DocBin` originated from
-        - col: name of the column in that dataframe represented by the given `DocBin`
+        - col_name: name of the column in that `DataFrame` represented by the given `DocBin`
+        - s_suff: determines whether the experiment is run on sample dataset
     """
+    loc = os.path.join(os.getcwd(),'..','docbins'+s_suff, col_name)
+    db.to_disk(os.path.join(loc+'.spacy'))	# store DocBin to disk at specified location
 
-    if not os.path.exists((df_dir := os.path.join(db_dir,df_name))):
-        os.mkdir(df_dir)
-    db.to_disk(os.path.join(df_dir,col+'.spacy'))	# store DocBin to disk at specified location
-
-def create_doc_dataframes(dataframes: dict[str, pd.DataFrame], colnames: dict[str, list[str]],
-                          nlp: spacy.Language, full: bool = False) -> dict[str, pd.DataFrame]:
+def load_docs(col_name: str, nlp: spacy.Language, s_suff: str) -> pd.DataFrame:
     """
-    Replaces the string data in the given dataframes with corresponding spaCy `Doc` objects present on the user's disk
-    ---
+    For a given column, loads the spaCy `Doc` objects present on the user's disk.
     ### params
-        - dataframes: dict with 
-            * keys: the names of the dataframes that should be modified
-            * values: the actual dataframes
-        - colnames: list of column names of which the string data should be replaced with corresponding `doc` objects
-        - nlp: the spaCy language object used to parse the strings
-        - full: set to True to run on the entire dataset
-    
+        - col_name: name of the column to be loaded
+        - nlp: the spaCy `Language` object used to parse the strings
+        - s_suff: determines whether the experiment is run on sample dataset
     ### returns
-        - dataframes: the same dict, but with parsed dataframes
+        - the `Doc` data that was present on the disk
     """
-    flag = '_sample' if not full else ''
-    db_dir = os.path.join(os.getcwd(),'..','docbins'+flag)
-    
-    # load DocBins into dict from disk
-    doc_bins = {df_name: {col: spacy.tokens.DocBin().from_disk(os.path.join(db_dir,df_name,col+'.spacy')) \
-                for col in colnames[df_name]} for df_name in dataframes.keys()}
-    # example where dataframes = ['train', 'test'] and col_names = ['search_term', 'product_title']:
-    # doc_bins = {'train': {'search_term': <DocBin>, 'product_title': <DocBin>},
-    #             'test':  {'search_term': <DocBin>, 'product_title': <DocBin>}}
-
-    for df_name, df in dataframes.items():
-        for col in colnames[df_name]:
-            doc_bin = doc_bins[df_name][col]			# access DocBin in dict
-            docs = list(doc_bin.get_docs(nlp.vocab))	# extract all Docs from DocBin
-            df[col] = docs								# load into dataframe, overwriting string data
-    
-    return dataframes
+    location = os.path.join(os.getcwd(),'..','docbins'+s_suff, col_name)
+    db = spacy.tokens.DocBin().from_disk(os.path.join(location+'.spacy'))
+    docs = list(db.get_docs(nlp.vocab))	    # extract all Docs from DocBin
+    return docs
