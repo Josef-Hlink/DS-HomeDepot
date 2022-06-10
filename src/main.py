@@ -81,7 +81,7 @@ def main():
     
     for col in parsable_cols:
         timer(f'creating {col} plots')
-        plot_distribution(dataframe, col)
+        plot_distribution(dataframe, col, s_suff)
     
     timer()
 

@@ -14,7 +14,7 @@ import pandas as pd                 # dataframes                  |
 import spacy                        # natural language processing |
 import numpy as np                  # arrays                      |
 # local imports --------------------------------------------------
-from helper import BOLD             # slightly improved TUI       |
+from helper import BOLD, PATH       # TUI, directories            |
 # ----------------------------------------------------------------
 
 def load_dataframes(filenames: list[str], s_suff: str) -> list[pd.DataFrame]:
@@ -27,8 +27,7 @@ def load_dataframes(filenames: list[str], s_suff: str) -> list[pd.DataFrame]:
         - dataframes: list containing all of the loaded `DataFrame`s
     """
     dataframes: list[pd.DataFrame] = []
-    data_dir: str = os.path.join(os.getcwd(), '..', 'sample_data') \
-                    if len(s_suff) else os.path.join(os.getcwd(), '..', 'data')
+    data_dir: str = PATH('..','sample_data') if len(s_suff) else PATH('..','data')
 
     for filename in filenames:
         try:
@@ -70,7 +69,7 @@ def store_as_docbin(db: spacy.tokens.DocBin, col_name: str, s_suff: str) -> None
         - col_name: name of the column in that `DataFrame` represented by the given `DocBin`
         - s_suff: determines whether the experiment is run on sample dataset
     """
-    loc = os.path.join(os.getcwd(),'..','docbins'+s_suff, col_name+'.spacy')
+    loc = PATH('..',f'docbins{s_suff}',f'{col_name}.spacy')
     db.to_disk(loc)	    # store DocBin to disk at specified location
 
 def load_docs(col_name: str, nlp: spacy.Language, s_suff: str) -> pd.DataFrame:
@@ -83,8 +82,7 @@ def load_docs(col_name: str, nlp: spacy.Language, s_suff: str) -> pd.DataFrame:
     ### returns
         - the `Doc` data that was present on the disk
     """
-    location = os.path.join(os.getcwd(),'..','docbins'+s_suff, col_name)
-    db = spacy.tokens.DocBin().from_disk(os.path.join(location+'.spacy'))
+    db = spacy.tokens.DocBin().from_disk(PATH('..',f'docbins{s_suff}',f'{col_name}.spacy'))
     docs = list(db.get_docs(nlp.vocab))	    # extract all Docs from DocBin
     return docs
 
@@ -94,12 +92,11 @@ def store_as_array(columns: tuple[pd.Series, pd.Series], s_suff: str) -> None:
     """
     relevance, similarity = columns[0], columns[1]
     array = np.array(list(zip(relevance.values, similarity.values)))
-    loc = os.path.join(os.getcwd(),'..','arrays'+s_suff, similarity.name+'.npy')
+    loc = PATH('..','arrays'+s_suff, similarity.name+'.npy')
     np.save(loc, array)	    # store array to disk at specified location
 
 def load_array(col_name: str, s_suff: str) -> np.ndarray:
     """
     For a given column, loads the NumPy array present on the user's disk
     """
-    loc = os.path.join(os.getcwd(),'..','arrays'+s_suff, 'sim_'+col_name+'.npy')
-    return np.load(loc)
+    return np.load(PATH('..','arrays'+s_suff, 'sim_'+col_name+'.npy'))

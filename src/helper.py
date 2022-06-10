@@ -15,6 +15,7 @@ import time                     # getting time indications during the experiment
 # --------------------------------------------------------------------------------
 
 BOLD = lambda string: f'\033[1m{string}\033[0m'
+PATH = lambda *args: os.path.join(os.getcwd(),*args)
 
 def argparse_wrapper(parser: argparse.ArgumentParser) -> tuple[str, bool]:
     """Returns the parsed arguments of the file"""
@@ -35,24 +36,24 @@ def fix_dirs(s_suff: str, p_flag: bool) -> None:
     """Changes cwd to src, and creates the necessary directories"""
     cwd = os.getcwd()
     if cwd.split(os.sep)[-1] != 'src':
-        if not os.path.exists(os.path.join(cwd, 'src')):
+        if not os.path.exists(PATH('src')):
             print(f'Please work from either the parent directory "{BOLD("Home-Depot")}",',
                   f'or from "{BOLD("src")}" in order to run any scripts that are in "src".')
             sys.exit(1)
-        os.chdir(os.path.join(cwd, 'src'))
+        os.chdir(PATH('src'))
         cwd = os.getcwd()
         caller = re.search(r'src(.*?).py', str(sys._getframe(1))).group(1)[1:] + '.py'
         print(f'\n WARNING: Working directory changed to "{cwd}".',
               f'Consider running {BOLD(caller)} directly from "src" dir next time.\n')
     
     for dirname in ['docbins', 'arrays']:
-        if os.path.exists((dir := os.path.join('..',dirname+s_suff))):
+        if os.path.exists((dir := PATH('..',dirname+s_suff))):
             if p_flag:
                 shutil.rmtree(dir)      # clear old data
                 os.mkdir(dir)           # make fresh directory in case we want to create a new one
         else:
             os.mkdir(dir)               # make fresh directory in case there wasn't one to start with
-    if not os.path.exists(results_dir := os.path.join(cwd, '..', 'results')):
+    if not os.path.exists(results_dir := PATH('..', 'results')):
         os.mkdir(results_dir)
 
 def print_pipeline(datasets: list[str], s_suff: str, p_flag: bool) -> None:

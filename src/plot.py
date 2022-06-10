@@ -14,6 +14,8 @@ import numpy as np                                  # arrays        |
 import pandas as pd                                 # dataframes    |
 import seaborn as sns                               # plotting      |
 from scipy.interpolate import make_interp_spline    # trend line    |
+# local imports ----------------------------------------------------
+from helper import BOLD, PATH           # TUI, directories          |
 # ------------------------------------------------------------------
 
 def plot_distribution(dataframe: pd.DataFrame, col_name: str, s_suff: str) -> None:
@@ -27,7 +29,7 @@ def plot_distribution(dataframe: pd.DataFrame, col_name: str, s_suff: str) -> No
 
     area_plot = sns.displot(dataframe, x='relevance', y='sim_'+col_name, kind='kde', fill=True)
     area_plot.ax.plot(X_, Y_, color='tab:orange')
-    area_plot.fig.savefig(os.path.join(os.getcwd(),'..','results',f'{col_name}_area_plot1{s_suff}.png'), dpi=300)
+    area_plot.fig.savefig(PATH('..','results',f'{col_name}_area_plot1{s_suff}.png'), dpi=300)
 
     dataframe = filter_low_similarities(dataframe)
     
@@ -38,7 +40,7 @@ def plot_distribution(dataframe: pd.DataFrame, col_name: str, s_suff: str) -> No
 
     area_plot = sns.displot(dataframe, x='relevance', y='sim_'+col_name, kind='kde', fill=True)
     area_plot.ax.plot(X_, Y_, color='tab:orange')
-    area_plot.fig.savefig(os.path.join(os.getcwd(),'..','results',f'{col_name}_area_plot2{s_suff}.png'), dpi=300)
+    area_plot.fig.savefig(PATH('..','results',f'{col_name}_area_plot2{s_suff}.png'), dpi=300)
 
 def calc_avg_similarities(dataframe: pd.DataFrame, col_name: str) -> OrderedDict:
     """Calculates the average similarity scores of a given metric"""
@@ -52,10 +54,10 @@ def calc_avg_similarities(dataframe: pd.DataFrame, col_name: str) -> OrderedDict
 def print_avg_similarities(dataframe: pd.DataFrame, col_name: str) -> None:
     """Prints raw data on the similarity scores of a metric that could also be plotted"""
     similarities = calc_avg_similarities(dataframe, col_name)
-    print(' rel |  sim  ')
-    print('-----+-------')
+    print(BOLD(' rel |  sim  '))
+    print(BOLD('-----+-------'))
     for rel in sorted(similarities.keys()):
-        print(f'{rel:<4} | {round(similarities[rel], 3):<5}')
+        print(f'{rel:<4} {BOLD("|")} {round(similarities[rel], 3):<5}')
 
 def filter_low_similarities(dataframe: pd.DataFrame) -> pd.DataFrame:
     """Filters out entries with unworkably low similarity scores"""
