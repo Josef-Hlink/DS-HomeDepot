@@ -18,35 +18,39 @@ from scipy.interpolate import make_interp_spline    # trend line    |
 from helper import BOLD, PATH           # TUI, directories          |
 # ------------------------------------------------------------------
 
-def plot_distribution(dataframe: pd.DataFrame, col_name: str, s_suff: str) -> None:
+def plot_distribution(dataframe: pd.DataFrame, col_name: str, sim_kind: str, s_suff: str) -> None:
 
     dataframe = filter_rare_relevancies(dataframe)
     
-    avg_similarities: OrderedDict = calc_avg_similarities(dataframe, col_name)
+    avg_similarities: OrderedDict = calc_avg_similarities(dataframe, f'{sim_kind}_sim_{col_name}')
     rel, sim = list(avg_similarities.keys()), list(avg_similarities.values())
     X_Y_Spline = make_interp_spline(rel, sim)
     X_ = np.linspace(min(rel), max(rel), 500); Y_ = X_Y_Spline(X_)
 
-    area_plot = sns.displot(dataframe, x='relevance', y='sim_'+col_name, kind='kde', fill=True)
+    area_plot = sns.displot(dataframe, x='relevance', y=f'{sim_kind}_sim_{col_name}',
+                            kind='kde', fill=True, levels=15, cmap='viridis')
+    area_plot.ax.plot(rel, sim, color='tab:orange', linestyle=':')
     area_plot.ax.plot(X_, Y_, color='tab:orange')
-    area_plot.fig.savefig(PATH('..','results',f'{col_name}_area_plot1{s_suff}.png'), dpi=300)
+    area_plot.fig.savefig(PATH('..','results',f'{sim_kind}_{col_name}_area_plot1{s_suff}.png'), dpi=300)
 
     dataframe = filter_low_similarities(dataframe)
     
-    avg_similarities: OrderedDict = calc_avg_similarities(dataframe, col_name)
+    avg_similarities: OrderedDict = calc_avg_similarities(dataframe, f'{sim_kind}_sim_{col_name}')
     rel, sim = list(avg_similarities.keys()), list(avg_similarities.values())
     X_Y_Spline = make_interp_spline(rel, sim)
     X_ = np.linspace(min(rel), max(rel), 500); Y_ = X_Y_Spline(X_)
 
-    area_plot = sns.displot(dataframe, x='relevance', y='sim_'+col_name, kind='kde', fill=True)
+    area_plot = sns.displot(dataframe, x='relevance', y=f'{sim_kind}_sim_{col_name}',
+                            kind='kde', fill=True, levels=15, cmap='viridis')
+    area_plot.ax.plot(rel, sim, color='tab:orange', linestyle=':')
     area_plot.ax.plot(X_, Y_, color='tab:orange')
-    area_plot.fig.savefig(PATH('..','results',f'{col_name}_area_plot2{s_suff}.png'), dpi=300)
+    area_plot.fig.savefig(PATH('..','results',f'{sim_kind}_{col_name}_area_plot2{s_suff}.png'), dpi=300)
 
 def calc_avg_similarities(dataframe: pd.DataFrame, col_name: str) -> OrderedDict:
     """Calculates the average similarity scores of a given metric"""
     similarities, occurrences = {}, {}
     for _, row in dataframe.iterrows():
-        rel, sim = row['relevance'], row['sim_'+col_name]
+        rel, sim = row['relevance'], row[col_name]
         try: similarities[rel] += (sim - similarities[rel])/occurrences[rel]; occurrences[rel] += 1
         except KeyError: similarities[rel] = sim; occurrences[rel] = 1
     return OrderedDict(sorted(similarities.items()))
@@ -62,8 +66,8 @@ def print_avg_similarities(dataframe: pd.DataFrame, col_name: str) -> None:
 def filter_low_similarities(dataframe: pd.DataFrame) -> pd.DataFrame:
     """Filters out entries with unworkably low similarity scores"""
     # NOTE not modular
-    dataframe = dataframe[dataframe.sim_product_title > 0.1]
-    dataframe = dataframe[dataframe.sim_product_description > 0.1]
+    dataframe = dataframe[dataframe.sem_sim_product_title > 0.1]
+    dataframe = dataframe[dataframe.sem_sim_product_description > 0.1]
     return dataframe
 
 def filter_rare_relevancies(dataframe: pd.DataFrame) -> pd.DataFrame:

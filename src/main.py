@@ -11,14 +11,16 @@ import argparse         # specifying args from command line |
 # dependencies ---------------------------------------------
 import pandas as pd     # dataframes                        |
 import spacy            # natural language processing       |
-# local imports -----------------------------------------------------------------
-from helper import (argparse_wrapper, suppress_W008,        # general utilities  |
-                    fix_dirs, print_pipeline, Timer)        # ...                |
-from datamanager import (load_dataframes, parse_data,       # data management    |
-                         store_as_docbin, load_docs,        # ...                |
-                         store_as_array, load_array)        # ...                |
-from plot import plot_distribution                          # plotting           |
-# -------------------------------------------------------------------------------
+# local imports --------------------------------------------------------------------
+from helper import (argparse_wrapper, suppress_W008,            # general utilities |
+                    fix_dirs, print_pipeline, Timer)            # ...               |
+from datamanager import (load_dataframes,                       # data management   |
+                         store_as_docbin, load_docs,            # ...               |
+                         store_as_array, load_array)            # ...               |
+from processing import (parse_data, calc_semantic_similarity,   # processing data   |
+                        calc_simple_similarity)                 # ...               |
+from plot import plot_distribution                              # plotting          |
+# ----------------------------------------------------------------------------------
 
 def main():
     
@@ -69,19 +71,27 @@ def main():
         docs: list[spacy.tokens.Doc] = load_docs(col, nlp, s_suff)
         dataframe[col] = docs
         
-        timer(f'calculating similarity search_term <-> {col}')
+        timer(f'calculating semantic similarity search_term <-> {col}')
         dataframe[f'zipped_{col}'] = tuple(zip(dataframe['search_term'], dataframe[col]))
-        dataframe[f'sim_{col}'] = dataframe[f'zipped_{col}'].map(lambda x: x[0].similarity(x[1]))
+        dataframe[f'sem_sim_{col}'] = calc_semantic_similarity(dataframe[f'zipped_{col}'])
+        timer(f'calculating simple similarity search_term <-> {col}')
+        dataframe[f'sim_sim_{col}'] = calc_simple_similarity(dataframe[f'zipped_{col}'])
+        timer(f'storing similarity calculations for {col}')
         dataframe.drop([col, 'zipped_'+col], axis=1, inplace=True)
-        store_as_array((dataframe['relevance'], dataframe[f'sim_{col}']), s_suff)
+        store_as_array((dataframe['relevance'], dataframe[f'sem_sim_{col}']), s_suff)
+        store_as_array((dataframe['relevance'], dataframe[f'sim_sim_{col}']), s_suff)
+
+    timer()
 
     for _, col in enumerate(parsable_cols):
-        array = load_array(col, s_suff)
-        dataframe[f'sim_{col}'] = array[:,1]
+        for sim_kind in ['sem_sim', 'sim_sim']:
+            array = load_array(f'{sim_kind}_{col}', s_suff)
+            dataframe[f'{sim_kind}_sim_{col}'] = array[:,1]
     
     for col in parsable_cols:
-        timer(f'creating {col} plots')
-        plot_distribution(dataframe, col, s_suff)
+        for sim_kind in ['sem', 'sim']:
+            timer(f'creating {sim_kind}_{col} plots')
+            plot_distribution(dataframe, col, sim_kind, s_suff)
     
     timer()
 

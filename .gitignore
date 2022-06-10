@@ -20,6 +20,8 @@ docbins*
 # numpy array directories
 arrays*
 
+# results directories
+results*
 
 # --- personal stuff ---
 
