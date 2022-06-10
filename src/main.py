@@ -19,7 +19,7 @@ from datamanager import (load_dataframes,                       # data managemen
                          store_as_array, load_array)            # ...               |
 from processing import (parse_data, calc_semantic_similarity,   # processing data   |
                         calc_simple_similarity)                 # ...               |
-from plot import plot_distribution                              # plotting          |
+from plot import plot_distributions                             # plotting          |
 # ----------------------------------------------------------------------------------
 
 def main():
@@ -89,13 +89,16 @@ def main():
     # convert search term data back to strings
     dataframe['search_term'] = dataframe['search_term'].map(lambda doc: doc.text)
 
+    translate = lambda x: x.replace('sim_sim_', 'simple similarity ').replace('sem_sim_', 'semantic similarity ')\
+                           .replace('product_title', 'product title').replace('product_description', 'product description')
+
     for col in parsable_cols:
         for sim_kind in ['sem', 'sim']:
             metric: str = f'{sim_kind}_sim_{col}'
-            timer(f'creating {metric} plots')
+            timer(f'creating {translate(metric)} plots')
             array = load_array(f'{metric}')
             dataframe[f'{metric}'] = array[:,1]
-            plot_distribution(dataframe, metric, s_suff)
+            plot_distributions(dataframe, metric, s_suff)
 
     timer()
 

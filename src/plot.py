@@ -13,51 +13,46 @@ import numpy as np                                  # arrays        |
 import pandas as pd                                 # dataframes    |
 import seaborn as sns                               # plotting      |
 from scipy.interpolate import make_interp_spline    # trend line    |
+from scipy.signal import savgol_filter              # ...           |
 # local imports ----------------------------------------------------
 from helper import BOLD, PATH           # TUI, directories          |
 # ------------------------------------------------------------------
 
-def plot_distribution(dataframe: pd.DataFrame, metric: str, s_suff: str) -> None:
+def plot_distributions(dataframe: pd.DataFrame, metric: str, s_suff: str) -> None:
 
+    global _S
     _S = s_suff
 
-    dataframe = filter_rare_relevancies(dataframe)
+    dataframe = filter_rare_relevancies(dataframe)  # rare relevancies always need to be filtered
+    for filter in [False, True]:
+        if filter:
+            if metric.startswith('sim'):
+                continue                            # simple similarity columns should not be filtered
+            dataframe = filter_low_similarities(dataframe, metric)
+        
+        avg_similarities: OrderedDict = calc_avg_similarities(dataframe, metric)
+        create_area_plot(dataframe, metric, avg_similarities, filter)
+
+def create_area_plot(dataframe: pd.DataFrame, metric: str, avg_similarities: dict, filter: bool) -> None:
+    """Creates a seaborn `displot` and saves it to disk"""
+    title: str = metric.replace('sim_sim_', 'Simple Similarity ').replace('sem_sim_', 'Semantic Similarity ')\
+                       .replace('product_title', 'Product Title').replace('product_description', 'Product Description')
+    alpha = 0.05 if (_S == '_sample') else 0.006
     
-    title: str = metric.replace('sim_sim_', 'Simple Similarity ').replace('sem_sim_', 'Semantic Similarity ')
-    title: str = title.replace('product_title', 'Product Title').replace('product_description', 'Product Description')
-    
-    avg_similarities: OrderedDict = calc_avg_similarities(dataframe, metric)
     rel, sim = list(avg_similarities.keys()), list(avg_similarities.values())
-    X_Y_Spline = make_interp_spline(rel, sim)
+    X_Y_Spline = make_interp_spline(rel, savgol_filter(sim, 5, 3))
     X_ = np.linspace(min(rel), max(rel), 500); Y_ = X_Y_Spline(X_)
-
-    area_plot = sns.displot(dataframe, x='relevance', y=metric,
-                            kind='kde', fill=True, levels=15, cmap='viridis', thresh=0)
-    area_plot.ax.scatter(dataframe['relevance'], dataframe[metric], color='white', alpha=0.05)
-    area_plot.ax.plot(rel, sim, color='tab:orange', linestyle=':')
-    area_plot.ax.plot(X_, Y_, color='tab:orange')
-    area_plot.ax.set_ylabel('similarity score')
-    area_plot.ax.set_title(title)
-    area_plot.fig.savefig(PATH('..',f'results{_S}',f'{metric}_plot.png'), bbox_inches='tight', dpi=300)
-
-    if metric.startswith('sim'):
-        return  # simple similarity columns do not need to be filtered
     
-    dataframe = filter_low_similarities(dataframe, metric)
-    
-    avg_similarities: OrderedDict = calc_avg_similarities(dataframe, metric)
-    rel, sim = list(avg_similarities.keys()), list(avg_similarities.values())
-    X_Y_Spline = make_interp_spline(rel, sim)
-    X_ = np.linspace(min(rel), max(rel), 500); Y_ = X_Y_Spline(X_)
-
     area_plot = sns.displot(dataframe, x='relevance', y=metric,
-                            kind='kde', fill=True, levels=15, cmap='viridis', thresh=0)
-    area_plot.ax.scatter(dataframe['relevance'], dataframe[metric], color='white', alpha=0.05)
-    area_plot.ax.plot(rel, sim, color='tab:orange', linestyle=':')
-    area_plot.ax.plot(X_, Y_, color='tab:orange')
+                                kind='kde', fill=True, levels=15, cmap='viridis', thresh=0)
+    area_plot.ax.scatter(dataframe['relevance'], dataframe[metric], color='white', alpha=alpha) # raw points
+    area_plot.ax.plot(rel, sim, color='tab:red')                                                # raw averages
+    area_plot.ax.plot(X_, Y_, color='tab:orange', linestyle=':')                                # smoothed averages
     area_plot.ax.set_ylabel('similarity score')
-    area_plot.ax.set_title(f'{title} (filtered)')
-    area_plot.fig.savefig(PATH('..',f'results{_S}',f'{metric}_plot_filtered.png'), bbox_inches='tight')
+    f_suff = ' (filtered)' if filter else ''
+    area_plot.ax.set_title(title+f_suff)
+    f_suff = '_filtered' if filter else ''
+    area_plot.fig.savefig(PATH('..',f'results{_S}',f'{metric}_plot{f_suff}.png'), bbox_inches='tight', dpi=300)
 
 def calc_avg_similarities(dataframe: pd.DataFrame, metric: str) -> OrderedDict:
     """Calculates the average similarity scores of a given metric"""
