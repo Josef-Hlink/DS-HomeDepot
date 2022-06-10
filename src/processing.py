@@ -12,8 +12,6 @@ from functools import lru_cache     # speeding up parsing   |
 # dependencies ---------------------------------------------
 import pandas as pd                 # dataframes            |
 import spacy                        # NLP                   |
-# local imports --------------------------------------------
-from helper import BOLD             # TUI                   |
 # ----------------------------------------------------------
 
 def parse_data(s: pd.Series, nlp: spacy.Language) -> spacy.tokens.DocBin:

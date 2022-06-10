@@ -13,7 +13,7 @@ import numpy as np                                  # arrays        |
 import pandas as pd                                 # dataframes    |
 import seaborn as sns                               # plotting      |
 from scipy.interpolate import make_interp_spline    # trend line    |
-from scipy.signal import savgol_filter              # ...           |
+from scipy.signal import savgol_filter              # trend line    |
 # local imports ----------------------------------------------------
 from helper import BOLD, PATH           # TUI, directories          |
 # ------------------------------------------------------------------
@@ -73,9 +73,7 @@ def print_avg_similarities(dataframe: pd.DataFrame, col_name: str) -> None:
 
 def filter_low_similarities(dataframe: pd.DataFrame, col_name: str) -> pd.DataFrame:
     """Filters out entries with unworkably low similarity scores"""
-    # NOTE not modular
     dataframe = dataframe[getattr(dataframe, col_name) > 0.1]
-    # dataframe = dataframe[dataframe.sem_sim_product_description > 0.1]
     return dataframe
 
 def filter_rare_relevancies(dataframe: pd.DataFrame) -> pd.DataFrame:
