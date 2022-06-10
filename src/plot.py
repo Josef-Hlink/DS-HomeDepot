@@ -33,7 +33,10 @@ def plot_distribution(dataframe: pd.DataFrame, col_name: str, sim_kind: str, s_s
     area_plot.ax.plot(X_, Y_, color='tab:orange')
     area_plot.fig.savefig(PATH('..','results',f'{sim_kind}_{col_name}_area_plot1{s_suff}.png'), dpi=300)
 
-    dataframe = filter_low_similarities(dataframe)
+    if sim_kind == 'sim':
+        return
+    
+    dataframe = filter_low_similarities(dataframe, f'{sim_kind}_sim_{col_name}')
     
     avg_similarities: OrderedDict = calc_avg_similarities(dataframe, f'{sim_kind}_sim_{col_name}')
     rel, sim = list(avg_similarities.keys()), list(avg_similarities.values())
@@ -63,11 +66,11 @@ def print_avg_similarities(dataframe: pd.DataFrame, col_name: str) -> None:
     for rel in sorted(similarities.keys()):
         print(f'{rel:<4} {BOLD("|")} {round(similarities[rel], 3):<5}')
 
-def filter_low_similarities(dataframe: pd.DataFrame) -> pd.DataFrame:
+def filter_low_similarities(dataframe: pd.DataFrame, col_name: str) -> pd.DataFrame:
     """Filters out entries with unworkably low similarity scores"""
     # NOTE not modular
-    dataframe = dataframe[dataframe.sem_sim_product_title > 0.1]
-    dataframe = dataframe[dataframe.sem_sim_product_description > 0.1]
+    dataframe = dataframe[getattr(dataframe, col_name) > 0.1]
+    # dataframe = dataframe[dataframe.sem_sim_product_description > 0.1]
     return dataframe
 
 def filter_rare_relevancies(dataframe: pd.DataFrame) -> pd.DataFrame:

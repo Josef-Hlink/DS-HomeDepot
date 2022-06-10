@@ -74,25 +74,28 @@ def main():
         timer(f'calculating semantic similarity search_term <-> {col}')
         dataframe[f'zipped_{col}'] = tuple(zip(dataframe['search_term'], dataframe[col]))
         dataframe[f'sem_sim_{col}'] = calc_semantic_similarity(dataframe[f'zipped_{col}'])
+
         timer(f'calculating simple similarity search_term <-> {col}')
         dataframe[f'sim_sim_{col}'] = calc_simple_similarity(dataframe[f'zipped_{col}'])
+
         timer(f'storing similarity calculations for {col}')
-        dataframe.drop([col, 'zipped_'+col], axis=1, inplace=True)
         store_as_array((dataframe['relevance'], dataframe[f'sem_sim_{col}']), s_suff)
         store_as_array((dataframe['relevance'], dataframe[f'sim_sim_{col}']), s_suff)
+        dataframe.drop([col, f'zipped_{col}', f'sem_sim_{col}', f'sim_sim_{col}'], axis=1, inplace=True)
 
-    timer()
-
-    for _, col in enumerate(parsable_cols):
-        for sim_kind in ['sem_sim', 'sim_sim']:
-            array = load_array(f'{sim_kind}_{col}', s_suff)
-            dataframe[f'{sim_kind}_sim_{col}'] = array[:,1]
+    # drop "irrelevant" columns
+    dataframe.drop(['id', 'product_uid'], axis=1, inplace=True)
     
+    # convert search term data back to strings
+    dataframe['search_term'] = dataframe['search_term'].map(lambda doc: doc.text)
+
     for col in parsable_cols:
         for sim_kind in ['sem', 'sim']:
             timer(f'creating {sim_kind}_{col} plots')
+            array = load_array(f'{sim_kind}_sim_{col}', s_suff)
+            dataframe[f'{sim_kind}_sim_{col}'] = array[:,1]
             plot_distribution(dataframe, col, sim_kind, s_suff)
-    
+
     timer()
 
 
