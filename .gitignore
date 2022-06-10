@@ -11,14 +11,10 @@ venv
 # --- project specific stuff ---
 
 # data directories
-data
-sample_data
+data*
 
-# spacy docbin directories
-docbins*
-
-# numpy array directories
-arrays*
+# storage directories
+storage*
 
 # results directories
 results*

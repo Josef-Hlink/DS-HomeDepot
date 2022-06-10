@@ -25,8 +25,11 @@ def load_dataframes(filenames: list[str], s_suff: str) -> list[pd.DataFrame]:
     ### returns
         - dataframes: list containing all of the loaded `DataFrame`s
     """
+    global _S
+    _S = s_suff
+    data_dir: str = PATH('..',f'data{_S}')
+    
     dataframes: list[pd.DataFrame] = []
-    data_dir: str = PATH('..','sample_data') if len(s_suff) else PATH('..','data')
 
     for filename in filenames:
         try:
@@ -40,7 +43,7 @@ def load_dataframes(filenames: list[str], s_suff: str) -> list[pd.DataFrame]:
     
     return dataframes
 
-def store_as_docbin(db: spacy.tokens.DocBin, col_name: str, s_suff: str) -> None:
+def store_as_docbin(db: spacy.tokens.DocBin, col_name: str) -> None:
     """
     Stores a spaCy `DocBin`on the user's disk at the specified location in the .spacy file format.
     ### params
@@ -48,10 +51,10 @@ def store_as_docbin(db: spacy.tokens.DocBin, col_name: str, s_suff: str) -> None
         - col_name: name of the column in that `DataFrame` represented by the given `DocBin`
         - s_suff: determines whether the experiment is run on sample dataset
     """
-    loc = PATH('..',f'docbins{s_suff}',f'{col_name}.spacy')
+    loc = PATH('..',f'storage{_S}','docbins',f'{col_name}.spacy')
     db.to_disk(loc)	    # store DocBin to disk at specified location
 
-def load_docs(col_name: str, nlp: spacy.Language, s_suff: str) -> pd.DataFrame:
+def load_docs(col_name: str, nlp: spacy.Language) -> pd.DataFrame:
     """
     For a given column, loads the spaCy `Doc` objects present on the user's disk.
     ### params
@@ -61,21 +64,21 @@ def load_docs(col_name: str, nlp: spacy.Language, s_suff: str) -> pd.DataFrame:
     ### returns
         - the `Doc` data that was present on the disk
     """
-    db = spacy.tokens.DocBin().from_disk(PATH('..',f'docbins{s_suff}',f'{col_name}.spacy'))
+    db = spacy.tokens.DocBin().from_disk(PATH('..',f'storage{_S}','docbins',f'{col_name}.spacy'))
     docs = list(db.get_docs(nlp.vocab))	    # extract all Docs from DocBin
     return docs
 
-def store_as_array(columns: tuple[pd.Series, pd.Series], s_suff: str) -> None:
+def store_as_array(columns: tuple[pd.Series, pd.Series]) -> None:
     """
     Stores numerical data from two columns as a 2D NumPy array in the .npy file format.
     """
     relevance, similarity = columns[0], columns[1]
     array = np.array(list(zip(relevance.values, similarity.values)))
-    loc = PATH('..','arrays'+s_suff, similarity.name+'.npy')
+    loc = PATH('..',f'storage{_S}','arrays', similarity.name+'.npy')
     np.save(loc, array)	    # store array to disk at specified location
 
-def load_array(col_name: str, s_suff: str) -> np.ndarray:
+def load_array(col_name: str) -> np.ndarray:
     """
     For a given name, loads the NumPy array present on the user's disk
     """
-    return np.load(PATH('..',f'arrays{s_suff}',f'{col_name}.npy'))
+    return np.load(PATH('..',f'storage{_S}','arrays',f'{col_name}.npy'))

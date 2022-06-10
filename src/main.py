@@ -33,7 +33,7 @@ def main():
     s_suff, p_flag = argparse_wrapper(arg_parser)
     suppress_W008()
     fix_dirs(s_suff, p_flag)
-    print_pipeline(datasets, s_suff, p_flag)
+    print_pipeline(datasets, p_flag)
 
     timer = Timer(first_process='reading original csv files')
     dataframes: list[pd.DataFrame] = load_dataframes(datasets, s_suff)
@@ -54,23 +54,23 @@ def main():
             s: pd.Series = dataframe[col]
             db: spacy.tokens.DocBin = parse_data(s, nlp)
             timer('saving parsed data to disk')
-            store_as_docbin(db, s.name, s_suff)
+            store_as_docbin(db, s.name)
             del s, db   # help Python with garbage collection
         timer()         # print time it took for the last step
         quit()		    # when data has been parsed and stored, prematurely quit the script
     # ----------------------------------------------------------------------------------------------------++
     
     timer('reading search_term spacy docs')
-    docs: list[spacy.tokens.Doc] = load_docs('search_term', nlp, s_suff)
+    docs: list[spacy.tokens.Doc] = load_docs('search_term', nlp)
     dataframe['search_term'] = docs
     
     parsable_cols.remove('search_term')
     
     for col in parsable_cols:
         timer(f'reading {col} spacy docs')
-        docs: list[spacy.tokens.Doc] = load_docs(col, nlp, s_suff)
+        docs: list[spacy.tokens.Doc] = load_docs(col, nlp)
         dataframe[col] = docs
-        
+
         timer(f'calculating semantic similarity search_term <-> {col}')
         dataframe[f'zipped_{col}'] = tuple(zip(dataframe['search_term'], dataframe[col]))
         dataframe[f'sem_sim_{col}'] = calc_semantic_similarity(dataframe[f'zipped_{col}'])
@@ -79,8 +79,8 @@ def main():
         dataframe[f'sim_sim_{col}'] = calc_simple_similarity(dataframe[f'zipped_{col}'])
 
         timer(f'storing similarity calculations for {col}')
-        store_as_array((dataframe['relevance'], dataframe[f'sem_sim_{col}']), s_suff)
-        store_as_array((dataframe['relevance'], dataframe[f'sim_sim_{col}']), s_suff)
+        store_as_array((dataframe['relevance'], dataframe[f'sem_sim_{col}']))
+        store_as_array((dataframe['relevance'], dataframe[f'sim_sim_{col}']))
         dataframe.drop([col, f'zipped_{col}', f'sem_sim_{col}', f'sim_sim_{col}'], axis=1, inplace=True)
 
     # drop "irrelevant" columns
@@ -91,10 +91,11 @@ def main():
 
     for col in parsable_cols:
         for sim_kind in ['sem', 'sim']:
-            timer(f'creating {sim_kind}_{col} plots')
-            array = load_array(f'{sim_kind}_sim_{col}', s_suff)
-            dataframe[f'{sim_kind}_sim_{col}'] = array[:,1]
-            plot_distribution(dataframe, col, sim_kind, s_suff)
+            metric: str = f'{sim_kind}_sim_{col}'
+            timer(f'creating {metric} plots')
+            array = load_array(f'{metric}')
+            dataframe[f'{metric}'] = array[:,1]
+            plot_distribution(dataframe, metric, s_suff)
 
     timer()
 

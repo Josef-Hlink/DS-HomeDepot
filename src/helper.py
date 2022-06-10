@@ -46,22 +46,24 @@ def fix_dirs(s_suff: str, p_flag: bool) -> None:
         print(f'\n WARNING: Working directory changed to "{cwd}".',
               f'Consider running {BOLD(caller)} directly from "src" dir next time.\n')
     
+    global _S
+    _S = s_suff
     for dirname in ['docbins', 'arrays']:
-        if os.path.exists((dir := PATH('..',dirname+s_suff))):
+        if os.path.exists((dir := PATH('..',f'storage{_S}',dirname+_S))):
             if p_flag:
                 shutil.rmtree(dir)      # clear old data
                 os.mkdir(dir)           # make fresh directory in case we want to create a new one
         else:
             os.mkdir(dir)               # make fresh directory in case there wasn't one to start with
-    if not os.path.exists(results_dir := PATH('..', 'results')):
+    if not os.path.exists(results_dir := PATH('..',f'results{_S}')):
         os.mkdir(results_dir)
 
-def print_pipeline(datasets: list[str], s_suff: str, p_flag: bool) -> None:
+def print_pipeline(datasets: list[str], p_flag: bool) -> None:
     lookup_table = {'train': ['product_title', 'search_term'],
                     'product_descriptions': ['product_description'],
                     'attributes': ['attributes']}
     
-    datasets_to_read = ', '.join([ds+s_suff+'.csv' for ds in datasets])
+    datasets_to_read = ', '.join([ds+_S+'.csv' for ds in datasets])
     columns_to_parse = ', '.join(set(col for dataset in datasets for col in lookup_table[dataset]))
 
     if p_flag:
@@ -86,7 +88,7 @@ class Timer:
 
     def __call__(self, next_process: str = None) -> None:
         """Prints the time it took to complete the previous process and if specified, the name of the next process"""
-        passed: float = round((toc := time.perf_counter()) - self.tic, 6)
+        passed: float = round((toc := time.perf_counter()) - self.tic, 2)
         print(f'{BOLD(passed)} s', end='')
         if next_process is not None:
             print(f'\n{next_process}: ', end='')
