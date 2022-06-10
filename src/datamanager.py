@@ -1,17 +1,18 @@
 """
 Data Manager
 ===
-Functions pertaining to data loading.
+Functions pertaining to data loading and parsing.
 ---
 Data Science Assignment 3 - Home Depot Search Results
 """
 
 # python standard library ----------------------------------------
-import os, sys, shutil              # directories                 |
+import os, sys                      # directories                 |
 from functools import lru_cache     # speeding up nlp parsing     |
 # dependencies ---------------------------------------------------
 import pandas as pd                 # dataframes                  |
 import spacy                        # natural language processing |
+import numpy as np                  # arrays                      |
 # local imports --------------------------------------------------
 from helper import BOLD             # slightly improved TUI       |
 # ----------------------------------------------------------------
@@ -63,14 +64,14 @@ def parse_data(s: pd.Series, nlp: spacy.Language) -> spacy.tokens.DocBin:
 
 def store_as_docbin(db: spacy.tokens.DocBin, col_name: str, s_suff: str) -> None:
     """
-    Stores a spaCy `DocBin`on the user's disk at the specified location.
+    Stores a spaCy `DocBin`on the user's disk at the specified location in the .spacy file format.
     ### params
         - db: a spaCy `DocBin` that is to be saved
         - col_name: name of the column in that `DataFrame` represented by the given `DocBin`
         - s_suff: determines whether the experiment is run on sample dataset
     """
-    loc = os.path.join(os.getcwd(),'..','docbins'+s_suff, col_name)
-    db.to_disk(os.path.join(loc+'.spacy'))	# store DocBin to disk at specified location
+    loc = os.path.join(os.getcwd(),'..','docbins'+s_suff, col_name+'.spacy')
+    db.to_disk(loc)	    # store DocBin to disk at specified location
 
 def load_docs(col_name: str, nlp: spacy.Language, s_suff: str) -> pd.DataFrame:
     """
@@ -86,3 +87,12 @@ def load_docs(col_name: str, nlp: spacy.Language, s_suff: str) -> pd.DataFrame:
     db = spacy.tokens.DocBin().from_disk(os.path.join(location+'.spacy'))
     docs = list(db.get_docs(nlp.vocab))	    # extract all Docs from DocBin
     return docs
+
+def store_as_array(columns: tuple[pd.Series, pd.Series], s_suff: str) -> None:
+    """
+    Stores numerical data from two columns as a 2D NumPy array in the .npy file format.
+    """
+    relevance, similarity = columns[0], columns[1]
+    array = np.array(list(zip(relevance.values, similarity.values)))
+    loc = os.path.join(os.getcwd(),'..','arrays'+s_suff, similarity.name+'.npy')
+    np.save(loc, array)	    # store array to disk at specified location

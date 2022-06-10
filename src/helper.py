@@ -45,12 +45,13 @@ def fix_dirs(s_suff: str, p_flag: bool) -> None:
         print(f'\n WARNING: Working directory changed to "{cwd}".',
               f'Consider running {BOLD(caller)} directly from "src" dir next time.\n')
     
-    if os.path.exists((db_dir := os.path.join('..','docbins'+s_suff))):
-        if p_flag:
-            shutil.rmtree(db_dir)    # clear old data
-            os.mkdir(db_dir)         # make fresh directory in case we want to create a new one
-    else:
-        os.mkdir(db_dir)             # make fresh directory in case there wasn't one to start with
+    for dirname in ['docbins', 'arrays']:
+        if os.path.exists((dir := os.path.join('..',dirname+s_suff))):
+            if p_flag:
+                shutil.rmtree(dir)      # clear old data
+                os.mkdir(dir)           # make fresh directory in case we want to create a new one
+        else:
+            os.mkdir(dir)               # make fresh directory in case there wasn't one to start with
     if not os.path.exists(results_dir := os.path.join(cwd, '..', 'results')):
         os.mkdir(results_dir)
 
@@ -74,6 +75,7 @@ def print_pipeline(datasets: list[str], s_suff: str, p_flag: bool) -> None:
     for pipe in pipeline: print('*', pipe)
 
 class Timer:
+
     def __init__(self, first_process: str) -> None:
         """Sets up a timer object and prints the name of the first process"""
         print(f'\nexperiment started at {datetime.now().strftime("%H:%M:%S")}')
@@ -91,7 +93,6 @@ class Timer:
         else:
             print()
             total_time: float = time.perf_counter() - self.start
-            minutes = int((total_time) // 60)
-            seconds = round((total_time) % 60, 1)
+            minutes, seconds = int((total_time) // 60), round((total_time) % 60, 1)
             total_time_string = f'{minutes}:{str(seconds).zfill(4)} min' if minutes else f'{seconds} sec\n'
             print(f'\nexperiment took {total_time_string}')

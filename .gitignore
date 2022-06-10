@@ -1,3 +1,5 @@
+# --- general python stuff ---
+
 # pycache
 */__pycache__
 __pycache__
@@ -5,12 +7,21 @@ __pycache__
 # venv
 venv
 
+
+# --- project specific stuff ---
+
 # data directories
 data
 sample_data
 
-# spacy doc directories
+# spacy docbin directories
 docbins*
+
+# numpy array directories
+arrays*
+
+
+# --- personal stuff ---
 
 # vscode settings
 .vscode
