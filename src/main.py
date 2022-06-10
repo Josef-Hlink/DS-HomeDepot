@@ -16,8 +16,9 @@ from helper import (argparse_wrapper, suppress_W008,        # general utilities 
                     fix_dirs, print_pipeline, Timer)        # ...                |
 from datamanager import (load_dataframes, parse_data,       # data management    |
                          store_as_docbin, load_docs,        # ...                |
-                         store_as_array)                    # ...                |
-# ------------------------------------------------------------------------------
+                         store_as_array, load_array)        # ...                |
+from plot import plot_distribution                          # plotting           |
+# -------------------------------------------------------------------------------
 
 def main():
     
@@ -74,9 +75,15 @@ def main():
         dataframe.drop([col, 'zipped_'+col], axis=1, inplace=True)
         store_as_array((dataframe['relevance'], dataframe[f'sim_{col}']), s_suff)
 
+    for _, col in enumerate(parsable_cols):
+        array = load_array(col, s_suff)
+        dataframe[f'sim_{col}'] = array[:,1]
+    
     for col in parsable_cols:
-        # plotting
-        ...
+        timer(f'creating {col} plots')
+        plot_distribution(dataframe, col)
+    
+    timer()
 
 
 if __name__ == "__main__":

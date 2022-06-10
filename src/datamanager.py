@@ -96,3 +96,10 @@ def store_as_array(columns: tuple[pd.Series, pd.Series], s_suff: str) -> None:
     array = np.array(list(zip(relevance.values, similarity.values)))
     loc = os.path.join(os.getcwd(),'..','arrays'+s_suff, similarity.name+'.npy')
     np.save(loc, array)	    # store array to disk at specified location
+
+def load_array(col_name: str, s_suff: str) -> np.ndarray:
+    """
+    For a given column, loads the NumPy array present on the user's disk
+    """
+    loc = os.path.join(os.getcwd(),'..','arrays'+s_suff, 'sim_'+col_name+'.npy')
+    return np.load(loc)
