@@ -15,10 +15,21 @@ import time                     # getting time indications during the experiment
 # --------------------------------------------------------------------------------
 
 BOLD = lambda string: f'\033[1m{string}\033[0m'
-PATH = lambda *args: os.path.join(os.getcwd(),*args)
+PATH = lambda *args: os.path.join(os.getcwd(), *args)
 
 def argparse_wrapper(parser: argparse.ArgumentParser) -> tuple[str, bool, bool, bool, bool]:
-    """Returns the parsed arguments of the file"""
+    """
+    Returns the parsed arguments of the file.
+    ### params
+        - the argparse `ArgumentParser` object that was instantiated in main.py
+    
+    ### returns
+        - s_suff: determines if the sample dataset should be used, this will be included at all the right places
+        - p_flag: toggles parsing of the string data into spaCy `Doc` objects
+        - c_flag: toggles calculating all metrics and storing this as NumPy arrays
+        - d_flag: toggles distribution plotting
+        - t_flag: toggles training and testing
+    """
     parser.add_argument('-f', '--full', action='store_true',
                         help='run script on full dataset, default is to run on sample data')
     parser.add_argument('-p', '--parse', action='store_true',
@@ -42,7 +53,7 @@ def suppress_W008() -> None:
     warnings.filterwarnings('ignore', message=r'\[W008\]', category=UserWarning)
 
 def fix_dirs(s_suff: str) -> None:
-    """Changes cwd to src, and creates the necessary directories"""
+    """Changes cwd to src, and creates the necessary storage and results directories"""
     cwd = os.getcwd()
     if cwd.split(os.sep)[-1] != 'src':
         if not os.path.exists(PATH('src')):
@@ -63,6 +74,7 @@ def fix_dirs(s_suff: str) -> None:
         os.mkdir(results_dir)
 
 def print_pipeline(datasets: list[str], p_flag: bool, c_flag: bool, d_flag: bool, t_flag: bool) -> None:
+    """Prints how the pipeline will be executed based on the datasets and the flags provided by the user"""
     relevant_columns = {'train': ['product_title', 'search_term'],
                         'product_descriptions': ['product_description']}
     

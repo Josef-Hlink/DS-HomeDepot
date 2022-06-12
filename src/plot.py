@@ -20,7 +20,13 @@ from processing import filter_rare_relevancies, filter_low_similarities # filter
 # ------------------------------------------------------------------------------------------
 
 def plot_distributions(dataframe: pd.DataFrame, metric: str, s_suff: str) -> None:
-
+    """
+    Creates all distribution plots for a given metric (wrapper for `create_area_plot()`).
+    ### params
+        - dataframe: the full pandas `DataFrame` with all data inside
+        - metric: the name of the column of which the similarity scores need to be plotted
+        - s_suff: lets plot.py know on what dataset the experiment is running
+    """
     global _S
     _S = s_suff
 
@@ -37,7 +43,13 @@ def plot_distributions(dataframe: pd.DataFrame, metric: str, s_suff: str) -> Non
         create_area_plot(dataframe, metric, avg_similarities, filter)
 
 def create_area_plot(dataframe: pd.DataFrame, metric: str, avg_similarities: dict, filter: bool) -> None:
-    """Creates a seaborn `displot` and saves it to disk"""
+    """
+    Creates a seaborn `displot` and saves it to disk.
+        - dataframe: the full (filtered) pandas `DataFrame` with all data inside
+        - metric: the name of the column of which the similarity scores need to be plotted
+        - avg_similarities: the average similarities of that column
+        - filter: flag that indicates whether the data has been filtered or not
+    """
     title: str = metric.replace('sim_sim_', 'Simple Similarity ').replace('sem_sim_', 'Semantic Similarity ')\
                        .replace('product_title', 'Product Title').replace('product_description', 'Product Description')
     alpha = 0.05 if (_S == '_sample') else 0.006
@@ -59,7 +71,17 @@ def create_area_plot(dataframe: pd.DataFrame, metric: str, avg_similarities: dic
     area_plot.fig.savefig(PATH('..',f'results{_S}',f'{metric}_plot{f_suff}.png'), bbox_inches='tight', dpi=300)
 
 def calc_avg_similarities(dataframe: pd.DataFrame, metric: str) -> OrderedDict:
-    """Calculates the average similarity scores of a given metric"""
+    """
+    Calculates the average similarity scores of a given metric.
+    ### params
+        - dataframe: the full pandas `DataFrame` with all data inside
+        - metric: the name of the column of which the similarity scores need to be averaged
+    
+    ### returns
+        - an ordered dictionary with:
+            * keys: relevancy scores (in increasing order)
+            * the corresponding averaged similarity scores
+    """
     similarities, occurrences = {}, {}
     for _, row in dataframe.iterrows():
         rel, sim = row['relevance'], row[metric]
@@ -68,7 +90,7 @@ def calc_avg_similarities(dataframe: pd.DataFrame, metric: str) -> OrderedDict:
     return OrderedDict(sorted(similarities.items()))
 
 def print_avg_similarities(dataframe: pd.DataFrame, col_name: str) -> None:
-    """Prints raw data on the similarity scores of a metric that could also be plotted"""
+    """Prints data on the average similarity scores of a metric that could also be plotted"""
     similarities = calc_avg_similarities(dataframe, col_name)
     print(BOLD(' rel |  sim  '))
     print(BOLD('-----+-------'))

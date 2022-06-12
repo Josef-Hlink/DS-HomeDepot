@@ -74,13 +74,14 @@ def main():
         
         timer('calculating query length')
         dataframe['len_of_query'] = calc_length(dataframe['search_term'])
-        store_as_array((dataframe['relevance'], dataframe['len_of_query']))
+        store_as_array(dataframe['relevance'], dataframe['len_of_query'])
         dataframe.drop('len_of_query', axis=1, inplace=True)
 
         for col in ['product_title', 'product_description']:
             timer(f'reading {col} spacy docs')
             docs: list[spacy.tokens.Doc] = load_docs(col, nlp)
             dataframe[col] = docs
+            del docs    # help Python with garbage collection
 
             timer(f'calculating semantic similarity search_term <-> {col}')
             dataframe[f'zipped_{col}'] = tuple(zip(dataframe['search_term'], dataframe[col]))
@@ -89,8 +90,8 @@ def main():
             timer(f'calculating simple similarity search_term <-> {col}')
             dataframe[f'sim_sim_{col}'] = calc_simple_similarity(dataframe[f'zipped_{col}'])
 
-            store_as_array((dataframe['relevance'], dataframe[f'sem_sim_{col}']))
-            store_as_array((dataframe['relevance'], dataframe[f'sim_sim_{col}']))
+            store_as_array(dataframe['relevance'], dataframe[f'sem_sim_{col}'])
+            store_as_array(dataframe['relevance'], dataframe[f'sim_sim_{col}'])
             dataframe.drop([col, f'zipped_{col}', f'sem_sim_{col}', f'sim_sim_{col}'], axis=1, inplace=True)
         
         dataframe.drop('search_term', axis=1, inplace=True)

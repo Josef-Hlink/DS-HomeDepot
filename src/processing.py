@@ -43,7 +43,7 @@ def calc_simple_similarity(series: pd.Series) -> pd.Series:
                                                     for word in [token.lemma_ for token in docs[0]]))
 
 def calc_length(series: pd.Series) -> pd.Series:
-    """Calculates the length of the an entry, duplicate spaces do count as words"""
+    """Calculates the amount of words in an entry, note that a double space does register as a word"""
     return series.apply(lambda x: len(x))
 
 def filter_low_similarities(dataframe: pd.DataFrame, col_name: str) -> pd.DataFrame:
@@ -52,7 +52,7 @@ def filter_low_similarities(dataframe: pd.DataFrame, col_name: str) -> pd.DataFr
     return dataframe
 
 def filter_rare_relevancies(dataframe: pd.DataFrame) -> pd.DataFrame:
-    """Filters out entries with relevancy scores that occur less than 5 times"""
+    """Filters out entries with relevance scores that occur less than 5 times"""
     rel = dataframe.relevance
     dataframe = dataframe[(rel != 1.25) & (rel != 1.5) & (rel != 2.5)  & (rel != 2.75)]
     return dataframe

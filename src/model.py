@@ -16,7 +16,7 @@ from processing import filter_rare_relevancies, filter_low_similarities     # cl
 # ----------------------------------------------------------------------------------------------
 
 def train_and_test(dataframe: pd.DataFrame) -> float:
-
+    """Trains and tests a random forest regressor on the given dataframe and returns the root mean squared error"""
     dataframe = dataframe.copy()
     dataframe = filter_rare_relevancies(dataframe)
     for col_name in ['sem_sim_product_title', 'sem_sim_product_description']:
