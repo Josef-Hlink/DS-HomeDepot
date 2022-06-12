@@ -10,6 +10,11 @@ Dependencies
 - `spaCy 3.3`
   * `en-core-web-lg`
 - `pandas 1.4.2`
+- `numpy 1.22.4`
+- `scipy 1.8.1`
+- `scikit-learn 1.1.1`
+- `matplotlib 3.5.2`
+- `seaborn 0.11.2`
 
 Setup
 ---
