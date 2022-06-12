@@ -23,7 +23,10 @@ def plot_distributions(dataframe: pd.DataFrame, metric: str, s_suff: str) -> Non
     global _S
     _S = s_suff
 
+    dataframe = dataframe.copy()                    # prevent original dataframe being changed (it is mutable)
+    dataframe.dropna(inplace=True)                  # drop test entries that do no have relevance scores
     dataframe = filter_rare_relevancies(dataframe)  # rare relevancies always need to be filtered
+    
     for filter in [False, True]:
         if filter:
             if metric.startswith('sim'):

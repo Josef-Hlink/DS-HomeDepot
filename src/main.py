@@ -28,7 +28,7 @@ def main():
     # STANDARD PROCEDURE #
     # ------------------ #
 
-    datasets = ['train', 'product_descriptions']
+    datasets = ['train', 'test', 'product_descriptions']
     nlp: spacy.Language = spacy.load('en_core_web_lg')
 
     print(f'pandas: v{pd.__version__}, spaCy: v{spacy.__version__}')
@@ -36,25 +36,23 @@ def main():
     arg_parser = argparse.ArgumentParser()
     s_suff, p_flag, c_flag, d_flag = argparse_wrapper(arg_parser)
     suppress_W008()
-    fix_dirs(s_suff, p_flag)
+    fix_dirs(s_suff)
     print_pipeline(datasets, p_flag, c_flag, d_flag)
 
     timer = Timer(first_process='reading original csv files')
     dataframes: list[pd.DataFrame] = load_dataframes(datasets, s_suff)
-
-    dataframe = dataframes.pop(0)   # "train" is the fundamental dataframe
-
-    for df in dataframes:
-        dataframe = pd.merge(dataframe, df, how='left', on='product_uid')
+    df_train, df_test, df_prod_desc = dataframes
+    dataframe = pd.concat((df_train, df_test), axis=0, ignore_index=True)
+    dataframe = pd.merge(dataframe, df_prod_desc, how='left', on='product_uid')
     
     parsable_cols = [col for col in dataframe.columns if (dataframe[col].dtype == object)]
 
 
     if p_flag:
         create('docbins')
-    # --------------------------------- #
-    # PARSING STRING DATA TO SPACY DOCS #
-    # --------------------------------- #
+        # --------------------------------- #
+        # PARSING STRING DATA TO SPACY DOCS #
+        # --------------------------------- #
         
         for col in parsable_cols:
             timer(f'parsing {col}')
@@ -69,9 +67,9 @@ def main():
     if c_flag:
         require('docbins')
         create('arrays')
-    # ----------------------------- #
-    # CALCULATING SIMILARITY SCORES #
-    # ----------------------------- #
+        # ----------------------------- #
+        # CALCULATING SIMILARITY SCORES #
+        # ----------------------------- #
 
         timer('reading search_term spacy docs')
         docs: list[spacy.tokens.Doc] = load_docs('search_term', nlp)
@@ -96,12 +94,11 @@ def main():
 
     if d_flag:
         require('arrays')
-    # ---------------------- #
-    # PLOTTING DISTRIBUTIONS #
-    # ---------------------- #
+        # ---------------------- #
+        # PLOTTING DISTRIBUTIONS #
+        # ---------------------- #
 
-        translate = lambda x: x.replace('sim_sim_', 'simple similarity ').replace('sem_sim_', 'semantic similarity ')\
-                            .replace('product_title', 'product title').replace('product_description', 'product description')
+        translate = lambda x: x.replace('sim_sim_', 'simple similarity ').replace('sem_sim_', 'semantic similarity ')
 
         for col in parsable_cols:
             for sim_kind in ['sem', 'sim']:

@@ -1,7 +1,7 @@
 """
 Helper
 ===
-General helper functions that are called from main.
+General helper functions used throughout many scripts.
 ---
 Data Science Assignment 3 - Home Depot Search Results
 """
@@ -38,7 +38,7 @@ def suppress_W008() -> None:
     """Suppresses useless warning that (correctly) states some of the words in the data are not recognized by spaCy"""
     warnings.filterwarnings('ignore', message=r'\[W008\]', category=UserWarning)
 
-def fix_dirs(s_suff: str, p_flag: bool) -> None:
+def fix_dirs(s_suff: str) -> None:
     """Changes cwd to src, and creates the necessary directories"""
     cwd = os.getcwd()
     if cwd.split(os.sep)[-1] != 'src':
@@ -61,11 +61,13 @@ def fix_dirs(s_suff: str, p_flag: bool) -> None:
 
 def print_pipeline(datasets: list[str], p_flag: bool, c_flag: bool, d_flag: bool) -> None:
     lookup_table = {'train': ['product_title', 'search_term'],
+                    'test': ['product_title', 'search_term'],
                     'product_descriptions': ['product_description']}
     
     datasets_to_read = ', '.join([ds+_S+'.csv' for ds in datasets])
     columns_to_parse = ', '.join(set(col for dataset in datasets for col in lookup_table[dataset]))
-    columns_to_calc = columns_to_plot = columns_to_parse.replace('search_term, ', '')
+    columns_to_calc = columns_to_parse.replace('search_term, ', '').replace(', search_term', '')
+    columns_to_plot = columns_to_calc
 
     pipeline: list[str] = [f'read {datasets_to_read}']
 
