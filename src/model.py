@@ -6,12 +6,21 @@ Functions pertaining to training and testing.
 Data Science Assignment 3 - Home Depot Search Results
 """
 
-import pandas as pd
-from sklearn.ensemble import RandomForestRegressor, BaggingRegressor
-from sklearn.model_selection import train_test_split as TTS
-from sklearn.metrics import mean_squared_error as MSE
+# dependencies ---------------------------------------------------------------------------------
+import pandas as pd                                                     # dataframes            |
+from sklearn.ensemble import RandomForestRegressor, BaggingRegressor    # regression models     |
+from sklearn.model_selection import train_test_split as TTS             # splitting data        |
+from sklearn.metrics import mean_squared_error as MSE                   # measuring performance |
+# local imports --------------------------------------------------------------------------------
+from processing import filter_rare_relevancies, filter_low_similarities     # cleaning data     |
+# ----------------------------------------------------------------------------------------------
 
 def train_and_test(dataframe: pd.DataFrame) -> float:
+
+    dataframe = dataframe.copy()
+    dataframe = filter_rare_relevancies(dataframe)
+    for col_name in ['sem_sim_product_title', 'sem_sim_product_description']:
+        filter_low_similarities(dataframe, col_name)
 
     y = dataframe['relevance'].values
     relevant_columns = ['sim_sim_product_title', 'sim_sim_product_description',
