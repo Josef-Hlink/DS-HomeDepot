@@ -48,10 +48,11 @@ def create_area_plot(dataframe: pd.DataFrame, metric: str, avg_similarities: dic
     
     area_plot = sns.displot(dataframe, x='relevance', y=metric,
                                 kind='kde', fill=True, levels=15, cmap='viridis', thresh=0)
-    area_plot.ax.scatter(dataframe['relevance'], dataframe[metric], color='white', alpha=alpha) # raw points
-    area_plot.ax.plot(rel, sim, color='tab:red')                                                # raw averages
-    area_plot.ax.plot(X_, Y_, color='tab:orange', linestyle=':')                                # smoothed averages
+    area_plot.ax.scatter(dataframe['relevance'], dataframe[metric], color='white', alpha=alpha, label='raw data points')
+    area_plot.ax.plot(rel, sim, color='tab:red', label='raw average')
+    area_plot.ax.plot(X_, Y_, color='tab:orange', linestyle=':', label='smoothed average')
     area_plot.ax.set_ylabel('similarity score')
+    area_plot.ax.legend(scatterpoints=20, labelcolor='white', facecolor='black', framealpha=0.5)
     f_suff = ' (filtered)' if filter else ''
     area_plot.ax.set_title(title+f_suff)
     f_suff = '_filtered' if filter else ''
