@@ -42,3 +42,6 @@ def calc_simple_similarity(series: pd.Series) -> pd.Series:
     return series.map(lambda docs: sum(int(' '.join(token.lemma_ for token in docs[1]).find(word)>=0) \
                                                     for word in [token.lemma_ for token in docs[0]]))
 
+def calc_length(series: pd.Series) -> pd.Series:
+    """Calculates the length of the an entry, duplicate spaces do count as words"""
+    return series.apply(lambda x: len(x))

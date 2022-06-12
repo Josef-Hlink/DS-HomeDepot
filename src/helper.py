@@ -17,7 +17,7 @@ import time                     # getting time indications during the experiment
 BOLD = lambda string: f'\033[1m{string}\033[0m'
 PATH = lambda *args: os.path.join(os.getcwd(),*args)
 
-def argparse_wrapper(parser: argparse.ArgumentParser) -> tuple[str, bool, bool, bool]:
+def argparse_wrapper(parser: argparse.ArgumentParser) -> tuple[str, bool, bool, bool, bool]:
     """Returns the parsed arguments of the file"""
     parser.add_argument('-f', '--full', action='store_true',
                         help='run script on full dataset, default is to run on sample data')
@@ -26,13 +26,16 @@ def argparse_wrapper(parser: argparse.ArgumentParser) -> tuple[str, bool, bool, 
     parser.add_argument('-c', '--calc_sim', action='store_true',
                         help='calculate similarity scores, parsed data needs to be present on disk!')
     parser.add_argument('-d', '--dis_plots', action='store_true',
-                        help='store distribution plots, similarity data needs to be present on disk!')
+                        help='create and store distribution plots, similarity data needs to be present on disk!')
+    parser.add_argument('-t', '--train_test', action='store_true',
+                        help='train and test a RF regression model on all numerical data that is present on disk')
     
     s_suff = '' if parser.parse_args().full else '_sample'
     p_flag = parser.parse_args().parse
     c_flag = parser.parse_args().calc_sim
     d_flag = parser.parse_args().dis_plots
-    return (s_suff, p_flag, c_flag, d_flag)
+    t_flag = parser.parse_args().train_test
+    return (s_suff, p_flag, c_flag, d_flag, t_flag)
 
 def suppress_W008() -> None:
     """Suppresses useless warning that (correctly) states some of the words in the data are not recognized by spaCy"""
@@ -59,13 +62,12 @@ def fix_dirs(s_suff: str) -> None:
     if not os.path.exists(results_dir := PATH('..',f'results{_S}')):
         os.mkdir(results_dir)
 
-def print_pipeline(datasets: list[str], p_flag: bool, c_flag: bool, d_flag: bool) -> None:
-    lookup_table = {'train': ['product_title', 'search_term'],
-                    'test': ['product_title', 'search_term'],
-                    'product_descriptions': ['product_description']}
+def print_pipeline(datasets: list[str], p_flag: bool, c_flag: bool, d_flag: bool, t_flag: bool) -> None:
+    relevant_columns = {'train': ['product_title', 'search_term'],
+                        'product_descriptions': ['product_description']}
     
     datasets_to_read = ', '.join([ds+_S+'.csv' for ds in datasets])
-    columns_to_parse = ', '.join(set(col for dataset in datasets for col in lookup_table[dataset]))
+    columns_to_parse = ', '.join(set(col for dataset in datasets for col in relevant_columns[dataset]))
     columns_to_calc = columns_to_parse.replace('search_term, ', '').replace(', search_term', '')
     columns_to_plot = columns_to_calc
 
@@ -75,11 +77,16 @@ def print_pipeline(datasets: list[str], p_flag: bool, c_flag: bool, d_flag: bool
         pipeline += [f'parse {columns_to_parse} data into spaCy docs', 'store spaCy doc data to disk']
     if c_flag:
         pipeline += [f'load stored spaCy doc data into columns {columns_to_parse}',
+                     'calculate length of search_term'
                      f'calculate similarity scores for {columns_to_calc}',
                      'store scores to disk as arrays']
     if d_flag:
         pipeline += [f'load stored scores into columns {columns_to_plot}', 'plot data distributions',
                      'save distribution plots to disk']
+    if t_flag:
+        pipeline += ['train Random Forest Regressor on numerical data',
+                     'test accuracy of the Random Forest Regressor on separate test set']
+    
     print('\npipeline:')
     for pipe in pipeline: print('*', pipe)
 
