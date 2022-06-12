@@ -11,6 +11,7 @@ from collections import OrderedDict     # trend line    |
 # dependencies -----------------------------------------------------
 import numpy as np                                  # arrays        |
 import pandas as pd                                 # dataframes    |
+import matplotlib.pyplot as plt                     # plotting      |
 import seaborn as sns                               # plotting      |
 from scipy.interpolate import make_interp_spline    # trend line    |
 from scipy.signal import savgol_filter              # trend line    |
@@ -96,3 +97,21 @@ def print_avg_similarities(dataframe: pd.DataFrame, col_name: str) -> None:
     print(BOLD('-----+-------'))
     for rel in sorted(similarities.keys()):
         print(f'{rel:<4} {BOLD("|")} {round(similarities[rel], 3):<5}')
+
+def plot_feature_importances(features: list[str], importances: list[float]) -> None:
+    """Plots the importance of each feature that was used in the regression model"""
+
+    translate = lambda feature: feature.replace('sim_sim_', 'simple sim. ').replace('sem_sim_', 'semantic sim. ')\
+                .replace('product_title', 'prod. title').replace('product_description', 'prod. descr.')\
+                .replace('len_of_query', 'query length')
+    
+    x_labels = list(map(translate, features))
+    fig, ax = plt.subplots()
+    ax.bar(x_labels, importances)
+    ax.set_ylabel('importance')
+    ax.set_title('Feature Importances')
+    for label in ax.get_xticklabels():
+        label.set_rotation(-45)
+        label.set_ha('left')
+    
+    fig.savefig(PATH('..',f'results{_S}','feature_importances.png'), bbox_inches='tight', dpi=300)

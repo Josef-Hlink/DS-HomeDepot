@@ -20,7 +20,7 @@ from datamanager import (load_dataframes, create, require,      # data managemen
 from processing import (parse_data, calc_semantic_similarity,   # processing data   |
                         calc_simple_similarity, calc_length)    # ...               |
 from plot import plot_distributions                             # plotting          |
-from model import train_and_test                                # regression model  |
+from model import train_and_test, show_feature_importances      # regression model  |
 # ----------------------------------------------------------------------------------
 
 def main():
@@ -133,6 +133,7 @@ def main():
 
         timer('training and testing')
         RMSE = train_and_test(dataframe)
+        show_feature_importances(dataframe)
 
 
     timer()
